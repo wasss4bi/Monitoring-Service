@@ -1,0 +1,19 @@
+.env
+AGENTS.md
+.gocache/
+.gomodcache/
+.git/
+tmp/
+docs/bruno/**/environments/
+
+**/node_modules/
+# Retained legacy local profiles are not Monitoring-Service build inputs.
+services/parser/
+services/playwright/
+services/parser/.*-session.json*
+services/parser/.endpoint-check/
+services/parser/browser-profile/
+services/parser/.*-bootstrap-*/
+services/parser/.*-reference-profile-*/
+services/parser/.*-live-profile-*/
+services/parser/cookies.txt*

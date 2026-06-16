@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS contact_verifications, contacts, endpoint_fetches, idempotency_keys, monitor_fetch_evaluations, monitor_rules, monitored_endpoints, monitors, notifications, operational_notifications, outbox_events, processed_messages, scheduler_capacity_locks, service_dependencies, target_hostnames, user_contacts, users CASCADE;

@@ -1,0 +1,8 @@
+p, admin, target-hostnames, ^.*$, any
+p, admin, users, ^GET$, any
+p, admin, profile, ^(GET|PUT|DELETE|POST)$, any
+p, user, profile, ^(GET|PUT|POST)$, own
+p, admin, contacts, ^.*$, any
+p, user, contacts, ^GET$, any
+p, user, me, ^.*$, own
+g, admin, user

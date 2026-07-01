@@ -1,0 +1,3076 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Go CRUD API",
+    "description": "JSON API written in Go without HTTP frameworks. Request bodies are limited to 1 MiB by default; exceeding the limit returns 413. Idempotency keys are bound to the HTTP method, request URI, body, and user; reuse for a different request returns 409.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local Docker server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Users",
+      "description": "CRUD operations for users"
+    },
+    {
+      "name": "Authentication",
+      "description": "JWT access-token issuance"
+    },
+    {
+      "name": "Contacts",
+      "description": "Notification channel catalog and user notification contacts"
+    },
+    {
+      "name": "Monitors",
+      "description": "Authenticated JSON API monitoring subscriptions"
+    },
+    {
+      "name": "Target hostnames",
+      "description": "Allow-list and runtime configuration for monitored hostnames"
+    }
+  ],
+  "paths": {
+    "/me/contacts/{contact_id}/verification": {
+      "post": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Request contact verification",
+        "description": "Queues a six-digit code for email or Telegram. Codes expire after 10 minutes. Requests are limited to one per minute for each contact.",
+        "operationId": "requestContactVerification",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Verification delivery queued"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Contact not found"
+          },
+          "409": {
+            "description": "Contact is already verified"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "429": {
+            "description": "Wait before requesting another code",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "description": "Verification unavailable"
+          }
+        }
+      }
+    },
+    "/me/contacts/{contact_id}/verification/confirm": {
+      "post": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Confirm contact verification code",
+        "description": "Accepts a valid code at most once. Five incorrect attempts invalidate the code. After verification the contact remains inactive.",
+        "operationId": "confirmContactVerification",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[0-9]{6}$",
+                    "example": "123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Contact verified"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Contact not found"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "description": "Verification unavailable"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "List users",
+        "operationId": "listUsers",
+        "responses": {
+          "200": {
+            "description": "Users list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires admin role."
+      },
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create user",
+        "operationId": "createUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInput"
+              },
+              "example": {
+                "name": "Alice",
+                "email": "alice@example.com",
+                "password": "Secret123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "425": {
+            "$ref": "#/components/responses/TooEarly"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": []
+      }
+    },
+    "/users/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user by ID",
+        "operationId": "getUser",
+        "responses": {
+          "200": {
+            "description": "User found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires the profile owner or admin."
+      },
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update user",
+        "operationId": "updateUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInput"
+              },
+              "example": {
+                "name": "Alice Updated",
+                "email": "alice.updated@example.com",
+                "password": "NewSecret123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires the profile owner or admin. Changing the password revokes all access tokens."
+      },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Delete user",
+        "operationId": "deleteUser",
+        "responses": {
+          "204": {
+            "description": "User deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires admin role."
+      }
+    },
+    "/users/{id}/check-password": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Check a user's password",
+        "operationId": "checkUserPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckPasswordRequest"
+              },
+              "example": {
+                "password": "Secret123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password check result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckPasswordResponse"
+                },
+                "example": {
+                  "valid": true
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires the profile owner or admin."
+      }
+    },
+    "/contacts": {
+      "get": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "List notification channels",
+        "operationId": "listContacts",
+        "responses": {
+          "200": {
+            "description": "Notification channels",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Contact"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires an authenticated user."
+      },
+      "post": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Create notification channel",
+        "operationId": "createContact",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Notification channel created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contact"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires admin role."
+      }
+    },
+    "/contacts/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Get notification channel",
+        "operationId": "getContact",
+        "responses": {
+          "200": {
+            "description": "Notification channel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contact"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires an authenticated user."
+      },
+      "put": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Update notification channel",
+        "operationId": "updateContact",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notification channel updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contact"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires admin role."
+      },
+      "delete": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Delete notification channel",
+        "operationId": "deleteContact",
+        "responses": {
+          "204": {
+            "description": "Notification channel deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires admin role."
+      }
+    },
+    "/me/contacts": {
+      "get": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "List the current user's notification contacts",
+        "operationId": "listUserContacts",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User notification contacts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserContact"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Add a notification contact for the current user",
+        "description": "An unknown contact_id returns a 400 validation error on contact_id.",
+        "operationId": "createUserContact",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserContactInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User notification contact created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserContact"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/me/contacts/{contact_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ContactID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Get the current user's notification contact",
+        "operationId": "getUserContact",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User notification contact",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserContact"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Update the current user's notification contact",
+        "operationId": "updateUserContact",
+        "description": "Changing the contact resets verification and activation; unverified contacts cannot be activated.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserContactUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User notification contact updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserContact"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Delete the current user's notification contact",
+        "operationId": "deleteUserContact",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User notification contact deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Create a JWT access token",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": []
+      }
+    },
+    "/me/monitors/{id}/resume": {
+      "post": {
+        "summary": "Resume a stopped or failed monitor and reactivate its endpoint",
+        "tags": [
+          "Monitors"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "required": true
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Monitor resumed. The response body is empty, including an idempotent replay."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Monitor not found"
+          },
+          "409": {
+            "description": "Monitor cannot be resumed or its target hostname is inactive or blocked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "Conflict",
+                    "message": "monitor cannot be resumed from its current status"
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        },
+        "operationId": "resumeMonitor"
+      }
+    },
+    "/me/monitors/{id}": {
+      "get": {
+        "summary": "Get current user monitor",
+        "tags": [
+          "Monitors"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Monitor"
+                }
+              }
+            },
+            "description": "Monitor"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Monitor not found"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        },
+        "operationId": "getMonitor"
+      },
+      "delete": {
+        "summary": "Soft delete monitor",
+        "tags": [
+          "Monitors"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "required": true
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Monitor deleted"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Monitor not found"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        },
+        "operationId": "deleteMonitor"
+      },
+      "patch": {
+        "summary": "Update monitor name",
+        "tags": [
+          "Monitors"
+        ],
+        "operationId": "updateMonitorName",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMonitorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Monitor updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Monitor"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Monitor not found"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        },
+        "description": "Changing rules_count_to_finish increments the monitor generation, supersedes in-flight checks and resets retry state. Stopped monitors remain stopped."
+      }
+    },
+    "/me/monitors": {
+      "post": {
+        "tags": [
+          "Monitors"
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Monitor"
+                }
+              }
+            },
+            "description": "Monitor created. A replay with the same Idempotency-Key returns its current state. HTML CSS selector or XPath validation and first endpoint fetch are asynchronous."
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "The monitor created with this Idempotency-Key was deleted."
+          },
+          "409": {
+            "description": "Idempotency-Key reuse, incompatible type/browser_page_url/json_source on an existing URL, or concurrent configuration change. error.message states the client-safe cause. Omitted browser_page_url means no browser source and can conflict with an existing browser-enabled URL.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "browser_page_url": {
+                    "value": {
+                      "error": {
+                        "code": "Conflict",
+                        "message": "this URL is already configured with a different browser_page_url"
+                      }
+                    }
+                  },
+                  "type": {
+                    "value": {
+                      "error": {
+                        "code": "Conflict",
+                        "message": "this URL is already configured with a different type"
+                      }
+                    }
+                  },
+                  "json_source": {
+                    "value": {
+                      "error": {
+                        "code": "Conflict",
+                        "message": "this URL is already configured with a different json_source"
+                      }
+                    }
+                  },
+                  "concurrent_change": {
+                    "value": {
+                      "error": {
+                        "code": "Conflict",
+                        "message": "resource settings changed concurrently; retry the request"
+                      }
+                    }
+                  },
+                  "idempotency": {
+                    "value": {
+                      "error": {
+                        "code": "Conflict",
+                        "message": "Idempotency-Key was already used for another request"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        },
+        "summary": "Create monitor",
+        "operationId": "createMonitor",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMonitorRequest"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "get": {
+        "summary": "List current user monitors",
+        "tags": [
+          "Monitors"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonitorList"
+                }
+              }
+            },
+            "description": "Monitor page"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        },
+        "operationId": "listMonitors"
+      }
+    },
+    "/me/monitors/{id}/rule": {
+      "post": {
+        "tags": [
+          "Monitors"
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonitorRule"
+                }
+              }
+            },
+            "description": "Rule created"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Monitor not found"
+          },
+          "409": {
+            "description": "Maximum of three rules reached or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "Conflict",
+                    "message": "monitor cannot contain more than three rules"
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        },
+        "summary": "Add immutable monitor rule",
+        "operationId": "addMonitorRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "required": true
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MonitorRuleInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "description": "Adding a rule increments the monitor generation, supersedes in-flight checks and resets retry state. An active monitor is scheduled again; a stopped monitor stays stopped."
+      }
+    },
+    "/me/monitors/{id}/stop": {
+      "post": {
+        "summary": "Stop monitor",
+        "tags": [
+          "Monitors"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "required": true
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Monitor stopped"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Monitor not found"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        },
+        "operationId": "stopMonitor"
+      }
+    },
+    "/me/notifications": {
+      "get": {
+        "summary": "List monitor notifications",
+        "tags": [
+          "Monitors"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "items": {
+                      "items": {
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "attempts_count": {
+                            "type": "integer"
+                          },
+                          "event_type": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "monitor_id": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "sent_at": {
+                            "format": "date-time",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "sending",
+                              "sent",
+                              "failed",
+                              "skipped"
+                            ]
+                          },
+                          "last_error": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "monitor_id",
+                          "event_type",
+                          "message",
+                          "status",
+                          "attempts_count",
+                          "created_at"
+                        ]
+                      },
+                      "type": "array"
+                    },
+                    "next_cursor": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            },
+            "description": "Notifications"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        }
+      }
+    },
+    "/target-hostnames": {
+      "get": {
+        "tags": [
+          "Target hostnames"
+        ],
+        "summary": "List target hostnames",
+        "operationId": "listTargetHostnames",
+        "responses": {
+          "200": {
+            "description": "Configured target hostnames",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetHostnameList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires admin role."
+      },
+      "post": {
+        "tags": [
+          "Target hostnames"
+        ],
+        "summary": "Create target hostname",
+        "operationId": "createTargetHostname",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TargetHostnameCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Target hostname created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetHostname"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "Conflict",
+                    "message": "hostname is already configured"
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires admin role."
+      }
+    },
+    "/target-hostnames/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Target hostnames"
+        ],
+        "summary": "Get target hostname",
+        "operationId": "getTargetHostname",
+        "responses": {
+          "200": {
+            "description": "Target hostname",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetHostname"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires admin role."
+      },
+      "patch": {
+        "tags": [
+          "Target hostnames"
+        ],
+        "summary": "Update target hostname",
+        "operationId": "updateTargetHostname",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TargetHostnameUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Target hostname updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetHostname"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires admin role."
+      },
+      "delete": {
+        "tags": [
+          "Target hostnames"
+        ],
+        "summary": "Delete unused target hostname",
+        "operationId": "deleteTargetHostname",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "Conflict",
+                    "message": "hostname cannot be deleted while monitors use it"
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "\n\nRequires admin role."
+      }
+    },
+    "/target-hostnames/{id}/reset-session": {
+      "post": {
+        "tags": [
+          "Target hostnames"
+        ],
+        "summary": "Reset managed monitor sessions for a target hostname",
+        "operationId": "resetTargetHostnameSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session reset",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetHostname"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Requires admin role. Clears managed anonymous sessions for this hostname, advances monitor/session/profile generations, rejects in-flight results and reschedules active monitors. Stopped/terminal monitors retain their status. Provided sessions and their jobs are preserved. Old Docker profiles are not deleted."
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "ID": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1
+        },
+        "example": 1
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Unique key for one logical request. The same key and request body return the original response for one hour.",
+        "schema": {
+          "type": "string",
+          "maxLength": 255
+        }
+      },
+      "UserID": {
+        "name": "user_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1
+        }
+      },
+      "ContactID": {
+        "name": "contact_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1
+        }
+      }
+    },
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "required": [
+          "access_token",
+          "token_type"
+        ],
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "token_type": {
+            "type": "string",
+            "example": "Bearer"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Alice"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "alice@example.com"
+          }
+        }
+      },
+      "UserInput": {
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "password"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 4,
+            "description": "Must contain more than 3 Unicode letters after trimming; digits, spaces, and punctuation are not allowed.",
+            "example": "Alice"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Must be a syntactically valid email address with a dot-separated domain. Domain labels cannot be empty or begin or end with a hyphen.",
+            "example": "alice@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 9,
+            "format": "password",
+            "description": "Must contain more than 8 characters, an uppercase letter, a number, and a punctuation or symbol character; maximum 72 UTF-8 bytes.",
+            "example": "Secret123!"
+          }
+        }
+      },
+      "CheckPasswordRequest": {
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "password": {
+            "type": "string",
+            "minLength": 9,
+            "format": "password",
+            "description": "Must contain more than 8 characters, an uppercase letter, a number, and a punctuation or symbol character; maximum 72 UTF-8 bytes.",
+            "example": "Secret123!"
+          }
+        }
+      },
+      "CheckPasswordResponse": {
+        "type": "object",
+        "required": [
+          "valid"
+        ],
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "Contact": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "example": "email"
+          }
+        }
+      },
+      "ContactInput": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50
+          }
+        }
+      },
+      "ContactUpdate": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50
+          }
+        }
+      },
+      "UserContact": {
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "contact_id",
+          "contact",
+          "channel",
+          "is_verified",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "contact_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "contact": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "channel": {
+            "type": "string",
+            "example": "telegram"
+          },
+          "is_verified": {
+            "type": "boolean"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UserContactInput": {
+        "type": "object",
+        "required": [
+          "contact_id",
+          "contact"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "contact_id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "contact": {
+            "type": "string",
+            "maxLength": 255
+          }
+        }
+      },
+      "UserContactUpdate": {
+        "type": "object",
+        "required": [
+          "contact",
+          "is_active"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "contact": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "HTTP status text.",
+                "example": "Bad Request"
+              },
+              "message": {
+                "type": "string",
+                "example": "invalid json",
+                "description": "A client-safe explanation owned by the application. Known business errors identify the conflicting setting or resource; unexpected failures describe the failed operation without SQL, stack traces, credentials or upstream diagnostic text."
+              }
+            }
+          }
+        }
+      },
+      "FieldErrors": {
+        "type": "object",
+        "description": "Validation messages grouped by request field name.",
+        "additionalProperties": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "email": [
+            "email must be of type user@mailhost.com"
+          ],
+          "password": [
+            "password must include an uppercase letter"
+          ]
+        }
+      },
+      "FieldError": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message",
+              "fields"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "HTTP status text.",
+                "example": "Bad Request"
+              },
+              "fields": {
+                "$ref": "#/components/schemas/FieldErrors"
+              },
+              "message": {
+                "type": "string",
+                "description": "Validation error summary.",
+                "example": "validation error"
+              }
+            }
+          }
+        }
+      },
+      "MonitorRule": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MonitorRuleInput"
+          },
+          {
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "type": "object",
+            "required": [
+              "id",
+              "created_at"
+            ]
+          }
+        ]
+      },
+      "CreateMonitorRequest": {
+        "properties": {
+          "url": {
+            "format": "uri",
+            "example": "https://example.com/api?currency=USD",
+            "type": "string",
+            "description": "Absolute HTTPS URL using the standard port 443. Its hostname must exist and be active in target_hostnames. HTML monitoring rejects top-level cross-origin navigation and extracts values only from an accepted 2xx document after page-owned redirects."
+          },
+          "rules": {
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/MonitorRuleInput"
+            },
+            "type": "array",
+            "maxItems": 3
+          },
+          "json_source": {
+            "$ref": "#/components/schemas/JSONSource"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "json",
+              "html"
+            ]
+          },
+          "path_type": {
+            "type": "string",
+            "description": "Extraction strategy: json or regex for JSON monitors; xpath or selector for HTML monitors.",
+            "enum": [
+              "json",
+              "regex",
+              "xpath",
+              "selector"
+            ]
+          },
+          "rules_count_to_finish": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of satisfied rules required to complete the monitor. Defaults to the number of rules."
+          },
+          "page_url": {
+            "type": "string",
+            "format": "uri",
+            "minLength": 9,
+            "maxLength": 8192,
+            "description": "Required product page URL owned by this monitor. Absolute HTTPS, standard port, same hostname as url, no fragment. Does not enable browser fetching. For HTML monitors url is still fetched; with json_source this product page is the HTTP source. Limited to 8192 bytes after URL normalization."
+          },
+          "session_mode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "provided"
+            ],
+            "description": "Defaults to provided when session is supplied, otherwise managed. Managed guest sessions may refresh once. Provided sessions never bootstrap or silently become guest sessions; replace the session then resume after rejection."
+          },
+          "session": {
+            "$ref": "#/components/schemas/MonitorSession"
+          },
+          "browser_page_url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 8192,
+            "description": "Optional JSON browser source page. HTTPS, standard port, same hostname as url, no fragment; only type=json and cannot be combined with json_source. The page must issue the exact monitored GET including its full query. Shared by the canonical endpoint; different browser_page_url for an existing URL returns 409. Does not replace the required product page_url. Limited to 8192 bytes after URL normalization.",
+            "nullable": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "name",
+          "path_type",
+          "url",
+          "rules",
+          "page_url"
+        ],
+        "additionalProperties": false,
+        "description": "Custom upstream headers are disabled. New requests supplying headers, including an empty object or null, return HTTP 400 with a headers field error. Idempotent replays retain the original historical response until expiry; legacy caller headers are never forwarded by workers."
+      },
+      "MonitorList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Monitor"
+            },
+            "type": "array"
+          },
+          "next_cursor": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ]
+      },
+      "MonitorRuleInput": {
+        "properties": {
+          "operator": {
+            "type": "string",
+            "enum": [
+              "<",
+              ">",
+              "=",
+              "<=",
+              ">=",
+              "!="
+            ]
+          },
+          "path": {
+            "type": "string",
+            "example": "product.prices[0].value",
+            "description": "Rule path. Its syntax is evaluated asynchronously according to the monitor path_type; malformed or missing values make that rule unsatisfied."
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "source": {
+            "$ref": "#/components/schemas/RuleSource"
+          },
+          "number_format": {
+            "type": "string",
+            "enum": [
+              "number",
+              "money"
+            ],
+            "default": "number",
+            "description": "money explicitly accepts currency symbols, strict three-digit space/NBSP/thin-space grouping and decimal dot/comma. Ambiguous values fail closed; number preserves previous numeric behavior."
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Required non-blank human-readable rule description. Trimmed before storage; used in successful Telegram notifications only when this rule actually matched. NUL characters are rejected."
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "operator",
+          "value",
+          "description"
+        ]
+      },
+      "Monitor": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stopped_at": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "last_checked_at": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/MonitorRule"
+            },
+            "type": "array"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "monitoring",
+              "success",
+              "error",
+              "stopped"
+            ],
+            "description": "Subscriber-specific asynchronous state. Jobs, session, credentials, cache and retry are isolated per monitor. Hostname allow-list and rate limits remain shared. Provided session rejection requires replacement before resume."
+          },
+          "last_error": {
+            "nullable": true,
+            "type": "string"
+          },
+          "json_source": {
+            "$ref": "#/components/schemas/JSONSource"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "json",
+              "html"
+            ]
+          },
+          "path_type": {
+            "type": "string",
+            "enum": [
+              "json",
+              "regex",
+              "xpath",
+              "selector"
+            ]
+          },
+          "rules_count_to_finish": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "page_url": {
+            "type": "string",
+            "format": "uri",
+            "minLength": 9,
+            "maxLength": 8192,
+            "description": "Required product page URL owned by this monitor. Absolute HTTPS, standard port, same hostname as url, no fragment. Does not enable browser fetching. For HTML monitors url is still fetched; with json_source this product page is the HTTP source. Limited to 8192 bytes after URL normalization."
+          },
+          "session_mode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "provided"
+            ]
+          },
+          "session_status": {
+            "type": "string",
+            "enum": [
+              "missing",
+              "ready",
+              "refreshing",
+              "blocked"
+            ]
+          },
+          "has_session": {
+            "type": "boolean",
+            "description": "Only metadata; the actual session is never returned."
+          },
+          "browser_page_url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 8192,
+            "description": "Optional JSON browser source page. HTTPS, standard port, same hostname as url, no fragment; only type=json and cannot be combined with json_source. The page must issue the exact monitored GET including its full query. Shared by the canonical endpoint; different browser_page_url for an existing URL returns 409. Does not replace the required product page_url. Limited to 8192 bytes after URL normalization.",
+            "nullable": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "path_type",
+          "rules_count_to_finish",
+          "url",
+          "status",
+          "created_at",
+          "updated_at",
+          "rules",
+          "session_mode",
+          "session_status",
+          "has_session",
+          "page_url"
+        ]
+      },
+      "MonitorSession": {
+        "type": "object",
+        "writeOnly": true,
+        "description": "Opaque parser v1 session export, at most 256 KiB. Stored encrypted on this monitor only; never returned or logged. Cookies must belong to the monitored hostname or a parent domain; storage origins must match exactly. Client browserProfile identifiers are discarded. HTML checks import this state into a private browser context; cookies and origin storage are isolated from other monitors.",
+        "required": [
+          "version",
+          "userAgent",
+          "cookieJar"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "enum": [
+              1
+            ]
+          },
+          "userAgent": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "locale": {
+            "type": "string"
+          },
+          "cookieJar": {
+            "type": "object",
+            "required": [
+              "cookies"
+            ],
+            "properties": {
+              "cookies": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "storageState": {
+            "type": "object"
+          },
+          "clientHints": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "sessionHeaders": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RuleSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "key_prefix",
+          "decode_json"
+        ],
+        "description": "Explicitly select exactly one key by literal prefix in the object at path. Optionally decode its JSON string. The rule path is then relative to that object. No domain-specific adaptation or random selection.",
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 1024
+          },
+          "key_prefix": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "decode_json": {
+            "type": "boolean"
+          }
+        }
+      },
+      "JSONSource": {
+        "type": "object",
+        "nullable": true,
+        "additionalProperties": false,
+        "required": [
+          "script_contains",
+          "object_key",
+          "match"
+        ],
+        "description": "Explicit JSON-in-HTML source. Requires type=json and the product page_url; cannot be combined with browser_page_url. Fetches page_url through HTTP/Squid without Chrome and selects exactly one matching object. The source configuration is shared by the canonical URL.",
+        "properties": {
+          "script_contains": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Substring marking an inline script; maximum 256 UTF-8 bytes. External scripts are ignored."
+          },
+          "object_key": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "Quoted JSON object property name in the marked script."
+          },
+          "match": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "value"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024,
+                "description": "Existing JSON path syntax inside the candidate object; maximum 1024 UTF-8 bytes."
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024,
+                "description": "Exact scalar text to match; maximum 1024 UTF-8 bytes."
+              }
+            }
+          }
+        }
+      },
+      "UpdateMonitorRequest": {
+        "type": "object",
+        "description": "Exactly one operation: update name; update rules_count_to_finish; or replace credentials using session_mode and/or session. Credential replacement invalidates in-flight results and cached/browser state but does not resume a stopped or failed monitor. Use POST resume separately.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "rules_count_to_finish": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "session_mode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "provided"
+            ],
+            "description": "Defaults to provided when session is supplied, otherwise managed. Managed guest sessions may refresh once. Provided sessions never bootstrap or silently become guest sessions; replace the session then resume after rejection."
+          },
+          "session": {
+            "$ref": "#/components/schemas/MonitorSession"
+          }
+        }
+      },
+      "TargetHostnameCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "hostname",
+          "limit_per_minute"
+        ],
+        "properties": {
+          "hostname": {
+            "type": "string",
+            "example": "api.example.com"
+          },
+          "bootstrap_url": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true,
+            "description": "Optional HTTPS source page for anonymous session preparation; it must use the configured hostname and port 443. Extraction remains GET-only, with bootstrap exceptions controlled separately by admin."
+          },
+          "limit_per_minute": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60000
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true
+          },
+          "bootstrap_rules": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "$ref": "#/components/schemas/BootstrapRequestRule"
+            },
+            "description": "Admin-only manual exceptions used only during session preparation. Default [] allows GET only. This path prefix limits a request exception; it does not scope a session."
+          }
+        }
+      },
+      "TargetHostnameUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "bootstrap_url": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true,
+            "description": "Set null to switch JSON fetches back to direct HTTPS."
+          },
+          "limit_per_minute": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60000
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "bootstrap_rules": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "$ref": "#/components/schemas/BootstrapRequestRule"
+            },
+            "description": "Admin-only manual bootstrap policy. Omit to preserve; [] clears exceptions. Changes fence old results and reschedule active monitors."
+          }
+        }
+      },
+      "TargetHostname": {
+        "type": "object",
+        "required": [
+          "id",
+          "hostname",
+          "limit_per_minute",
+          "is_active",
+          "has_session",
+          "session_status",
+          "session_generation",
+          "created_at",
+          "updated_at",
+          "bootstrap_rules"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "bootstrap_url": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
+          "limit_per_minute": {
+            "type": "integer"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "has_session": {
+            "type": "boolean"
+          },
+          "session_status": {
+            "type": "string",
+            "enum": [
+              "missing",
+              "ready",
+              "refreshing",
+              "blocked"
+            ]
+          },
+          "session_generation": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "session_updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_session_error": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bootstrap_rules": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "$ref": "#/components/schemas/BootstrapRequestRule"
+            },
+            "description": "Admin-only manual exceptions used only during session preparation. Default [] allows GET only. This path prefix limits a request exception; it does not scope a session."
+          }
+        }
+      },
+      "TargetHostnameList": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TargetHostname"
+            }
+          }
+        }
+      },
+      "BootstrapRequestRule": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "origin",
+          "path_prefix",
+          "methods"
+        ],
+        "properties": {
+          "origin": {
+            "type": "string",
+            "format": "uri",
+            "description": "Exact public HTTPS origin on port 443; no credentials, query, fragment or non-root path."
+          },
+          "path_prefix": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024,
+            "pattern": "^/"
+          },
+          "methods": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "enum": [
+                "GET",
+                "HEAD",
+                "POST",
+                "OPTIONS"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "PayloadTooLarge": {
+        "description": "Request body exceeds the configured limit (1 MiB by default).",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Invalid JSON or one or more invalid request fields.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/Error"
+                },
+                {
+                  "$ref": "#/components/schemas/FieldError"
+                }
+              ]
+            },
+            "examples": {
+              "invalidJson": {
+                "summary": "Malformed JSON",
+                "value": {
+                  "error": {
+                    "code": "Bad Request",
+                    "message": "invalid json"
+                  }
+                }
+              },
+              "invalidFields": {
+                "summary": "Field validation failure",
+                "value": {
+                  "error": {
+                    "code": "Bad Request",
+                    "fields": {
+                      "email": [
+                        "email must be of type user@mailhost.com"
+                      ]
+                    },
+                    "message": "validation error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Authentication is required or the token is invalid.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Authenticated user does not have permission for this operation.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "The email address is already used by another user.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/FieldError"
+            },
+            "example": {
+              "error": {
+                "code": "Conflict",
+                "fields": {
+                  "email": [
+                    "this email is already exists"
+                  ]
+                },
+                "message": "validation error"
+              }
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "The request could not be completed. The response contains a safe operation-specific explanation or a generic fallback; technical diagnostics are not exposed.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "Internal Server Error",
+                "message": "failed to process request; try again later"
+              }
+            }
+          }
+        }
+      },
+      "IdempotencyConflict": {
+        "description": "The Idempotency-Key was already used with another request body or user.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "TooEarly": {
+        "description": "The request with this Idempotency-Key is still processing.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "MethodNotAllowed": {
+        "description": "Method not allowed. The Allow response header lists supported methods.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "GatewayTimeout": {
+        "description": "The request did not finish within two seconds.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "Service unavailable",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "Service Unavailable",
+                "message": "service unavailable"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

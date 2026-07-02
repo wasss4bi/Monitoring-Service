@@ -1,0 +1,33 @@
+info:
+  name: Login admin
+  type: http
+  seq: 2
+  tags:
+    - Authentication
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/login"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "{{adminEmail}}",
+        "password": "{{adminPassword}}"
+      }
+  auth: inherit
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        if (res.status === 200) {
+          const body = res.getBody();
+          if (body && typeof body.access_token === 'string' && body.access_token) {
+            bru.setEnvVar('adminAccessToken', body.access_token);
+          }
+        }
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

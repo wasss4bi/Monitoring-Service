@@ -1,0 +1,20 @@
+info:
+  name: Replace monitor session
+  type: http
+  seq: 21
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/me/monitors/{{monitorId}}"
+  body:
+    type: json
+    data: |-
+      {"session_mode":"provided", "session":{{monitorSession}}}
+  auth: inherit
+
+docs: |-
+  Replaces credentials of the authenticated owner's monitor only.
+  Invalidates an in-flight check and old browser/cache state.
+  Does not automatically resume a terminal monitor: POST /me/monitors/{{monitorId}}/resume next.
+  To switch explicitly to an automatically managed guest session:
+  {"session_mode":"managed"}

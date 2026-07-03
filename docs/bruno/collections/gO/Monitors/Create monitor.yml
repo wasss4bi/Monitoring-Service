@@ -1,0 +1,217 @@
+info:
+  name: Create monitor
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors"
+  body:
+    type: json
+    data: |-
+      // DNS
+      // {
+      //   "name": "DNS: кабель Keyron, цена <= 5799 ₽",
+      //   "url": "https://www.dns-shop.ru/product/microdata/8a0a0362-850a-42d3-9295-b4810bdbc259/",
+      //   "page_url": "https://www.dns-shop.ru/product/8a0a0362850abc25/kabel-keyron-usb-type-c-usb-type-a-seryj/",
+      //   "type": "json",
+      //   "path_type": "json",
+      //   "session_mode": "managed",
+      //   "rules": [
+      //     {
+      //       "path": "data.offers.price",
+      //       "operator": "<=",
+      //       "value": 5799,
+      //       "description": "Цена не выше 5799 ₽"
+      //     }
+      //   ],
+      //   "browser_page_url": "https://www.dns-shop.ru/product/8a0a0362850abc25/kabel-keyron-usb-type-c-usb-type-a-seryj/"
+      // }
+
+      // OZON
+      // {
+      //   "name": "Ozon: iPhone 14 Pro 5892688031, обычная цена <= 58638 ₽",
+      //   "url": "https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=%2Fproduct%2F5892688031%2F&__rr=1&abt_att=1",
+      //   "type": "json",
+      //   "path_type": "json",
+      //   "session_mode": "managed",
+      //   "rules": [
+      //     {
+      //       "path": "price",
+      //       "source": {
+      //         "path": "widgetStates",
+      //         "key_prefix": "webPrice-",
+      //         "decode_json": true
+      //       },
+      //       "number_format": "money",
+      //       "operator": "<=",
+      //       "value": 58638,
+      //       "description": "Обычная цена не выше 58638 ₽"
+      //     }
+      //   ],
+      //   "page_url": "https://www.ozon.ru/product/5892688031/"
+      // }
+
+      // WB
+      // {
+      //   "name": "WB: товар 876143564, цена <= 70336 ₽ (7033600 коп.)",
+      //   "url": "https://www.wildberries.ru/__internal/u-card/cards/v4/detail?appType=1&curr=rub&dest=1259570991&spp=30&hide_vflags=4294967296&mtype=257&lang=ru&ab_testing=false&nm=876143564",
+      //   "page_url": "https://www.wildberries.ru/catalog/876143564/detail.aspx?targetUrl=MI",
+      //   "type": "json",
+      //   "path_type": "json",
+      //   "session_mode": "managed",
+      //   "rules": [
+      //     {
+      //       "path": "products[0].sizes[0].price.product",
+      //       "operator": "<=",
+      //       "value": 7033600,
+      //       "description": "Цена не выше 70336 ₽"
+      //     },
+      //     {
+      //       "path": "products[0].sizes[0].stocks[0].qty",
+      //       "operator": ">=",
+      //       "value": 1,
+      //       "description": "Товар в наличии"
+      //     }
+      //   ],
+      //   "browser_page_url": "https://www.wildberries.ru/catalog/876143564/detail.aspx?targetUrl=MI"
+      // }
+
+      // AVITO
+      // {
+      //   "name": "Avito: диски с резиной R15, цена <= 23000 ₽",
+      //   "url": "https://www.avito.ru/omsk/zapchasti_i_aksessuary/diski_s_rezinoy_r15_8410240406",
+      //   "type": "html",
+      //   "path_type": "selector",
+      //   "session_mode": "managed",
+      //   "rules": [
+      //     {
+      //       "path": "[data-marker=\"item-view/item-price\"]",
+      //       "operator": "<=",
+      //       "value": 23000,
+      //       "description": "Цена не выше 23000 ₽"
+      //     }
+      //   ],
+      //   "page_url": "https://www.avito.ru/omsk/zapchasti_i_aksessuary/diski_s_rezinoy_r15_8410240406"
+      // }
+
+      // LAMODA
+      // {
+      //   "name": "Lamoda: Lacoste MP002XM0281A, цена <= 28990 ₽ и наличие",
+      //   "url": "https://www.lamoda.ru/api/v1/product/get?sku=MP002XM0281A&is_hybrid_supported=true&size_id=0",
+      //   "page_url": "https://www.lamoda.ru/p/mp002xm0281a/shoes-lacoste-krossovki/",
+      //   "json_source": {
+      //     "script_contains": "__NUXT__",
+      //     "object_key": "product",
+      //     "match": {
+      //       "path": "sku",
+      //       "value": "MP002XM0281A"
+      //     }
+      //   },
+      //   "type": "json",
+      //   "path_type": "json",
+      //   "session_mode": "managed",
+      //   "rules": [
+      //     {
+      //       "path": "price",
+      //       "operator": "<=",
+      //       "value": 28990,
+      //       "description": "Цена не выше 28990 ₽"
+      //     },
+      //     {
+      //       "path": "sizes[9].stock_quantity",
+      //       "operator": ">=",
+      //       "value": 1,
+      //       "description": "Товар в наличии"
+      //     }
+      //   ]
+      // }
+
+      // LEMANAPRO
+      // {
+      //   "name": "Лемана ПРО: Twin 87164932, цена за м² <= 6423 ₽",
+      //   "url": "https://lemanapro.ru/product/keramogranit-alma-ceramica-twin-60x60-sm-18-m-matovyy-cvet-chernyy-87164932/",
+      //   "type": "html",
+      //   "path_type": "xpath",
+      //   "session_mode": "managed",
+      //   "rules": [
+      //     {
+      //       "path": "(//main//div[@value and contains(@class,\"_pdp\") and contains(.,\"/м²\")])[1]/@value",
+      //       "operator": "<=",
+      //       "value": 6423,
+      //       "description": "Цена за м² не выше 6423 ₽"
+      //     }
+      //   ],
+      //   "page_url": "https://lemanapro.ru/product/keramogranit-alma-ceramica-twin-60x60-sm-18-m-matovyy-cvet-chernyy-87164932/"
+      // }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const raw = req.getBody({ raw: true });
+        if (typeof raw !== 'string') {
+          throw new Error('Open Body and uncomment exactly one marketplace JSON block.');
+        }
+        const active = raw.split(/\r?\n/).filter(line => !/^\s*\/\//.test(line)).join('\n').trim();
+        if (!active) {
+          throw new Error('Uncomment exactly one marketplace JSON block before sending.');
+        }
+        const sessionNames = new Set(['dnsSession', 'ozonSession', 'wildberriesSession', 'avitoSession']);
+        const resolved = active.replace(/\{\{([A-Za-z_][A-Za-z0-9_]*)\}\}/g, (_match, name) => {
+          if (!sessionNames.has(name)) throw new Error('Unsupported body variable: ' + name);
+          const value = bru.getEnvVar(name);
+          if (value === undefined || value === null || value === '') {
+            throw new Error('Fill ' + name + ' in the selected environment Secrets with your own v1 export.');
+          }
+          let session = value;
+          try { if (typeof session === 'string') session = JSON.parse(session); }
+          catch { throw new Error(name + ' must contain a v1 JSON object, not a Cookie header.'); }
+          if (!session || session.version !== 1 || typeof session.userAgent !== 'string' ||
+              !session.userAgent || !Array.isArray(session.cookieJar?.cookies)) {
+            throw new Error(name + ' must contain version=1, userAgent and cookieJar.cookies.');
+          }
+          return JSON.stringify(session);
+        });
+        let payload;
+        try { payload = JSON.parse(resolved); }
+        catch { throw new Error('Uncomment exactly one complete JSON object; keep other blocks commented.'); }
+        if (!payload || Array.isArray(payload) || typeof payload.url !== 'string') {
+          throw new Error('The selected monitor must be a JSON object with url.');
+        }
+        const hostname = /^https:\/\/([a-z0-9.-]+)(?:[/?#:]|$)/i.exec(payload.url)?.[1]?.toLowerCase();
+        if (!hostname) throw new Error('The monitor URL must use HTTPS.');
+        req.setBody(payload);
+    - type: after-response
+      code: |-
+        if (res.status === 200 || res.status === 201) {
+          const body = res.getBody();
+          if (body && Number.isInteger(body.id)) bru.setEnvVar('monitorId', String(body.id));
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+docs: |-
+  Select environment monitoring_service. Run Authentication/Login to refresh accessToken.
+  Every marketplace body is commented. Uncomment ONE complete JSON object below its // label.
+  Leave the label and all other bodies commented. The pre-request script removes full-line comments locally.
+  All six examples use managed guest sessions; no session export is required.
+  The collection generates a fresh Idempotency-Key when the header is absent or blank.
+  A manually specified header is preserved. For an exact retry, copy the previous key from Timeline.
+  Cookie exports are credentials. Do not share them, logs, request screenshots or environment exports.
+  WB price is in kopecks; Lemanapro uses price per square metre, not per box.
+  Ozon 19 failed guest bootstrap with HTTP 403; Lemanapro 23 returned HTTP 401.
+  Browser-based requests use Browserless v1; Lamoda uses HTTP/Squid json_source.
+  API error.code remains the HTTP status text; error.message explains the safe business cause.
+  A 409 mentioning browser_page_url means this API URL already uses another browser source.
+  page_url is the product link and does not replace browser_page_url. Match the existing source settings.
+  An unchanged Idempotency-Key returns the created monitor's current state, or 404 if it was deleted. Errors recorded before creation are replayed.
+  See docs/api-errors.md for the error contract and safe retry guidance.

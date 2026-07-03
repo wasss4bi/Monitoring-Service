@@ -1,0 +1,23 @@
+info:
+  name: Resume monitor
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors/{{monitorId}}/resume"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  variables:
+    - name: monitorId
+      value: "10"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

@@ -1,0 +1,43 @@
+info:
+  name: Create monitor - Avito
+  type: http
+  seq: 29
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Avito: диски с резиной R15, цена <= 23000 ₽",
+        "url": "https://www.avito.ru/omsk/zapchasti_i_aksessuary/diski_s_rezinoy_r15_8410240406",
+        "type": "html",
+        "path_type": "selector",
+        "session_mode": "managed",
+        "rules": [
+          {
+            "path": "[data-marker=\"item-view/item-price\"]",
+            "operator": "<=",
+            "value": 23000,
+            "description": "Цена не выше 23000 ₽"
+          }
+        ],
+        "page_url": "https://www.avito.ru/omsk/zapchasti_i_aksessuary/diski_s_rezinoy_r15_8410240406"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+docs: |-
+  Промежуточный HTTP 439 может смениться успешной страницей: сервис ждёт в пределах общего тайм-аута.
+  Без ручного Idempotency-Key коллекция создаёт новый UUID при каждой отправке. Для повтора укажите прежний ключ из Timeline.
+  target_hostname должен существовать и быть активным; Telegram-контакт — активным и подтверждённым.
+  Используется managed: сервис автоматически создаёт анонимную сессию; переменные *Session не нужны.

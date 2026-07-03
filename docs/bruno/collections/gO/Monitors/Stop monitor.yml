@@ -1,0 +1,8 @@
+info:
+  name: Stop monitor
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors/{{monitorId}}/stop"
+  auth: inherit

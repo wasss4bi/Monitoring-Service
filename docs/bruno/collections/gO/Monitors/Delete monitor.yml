@@ -1,0 +1,8 @@
+info:
+  name: Delete monitor
+  type: http
+  seq: 7
+http:
+  method: DELETE
+  url: "{{baseUrl}}/me/monitors/{{monitorId}}"
+  auth: inherit

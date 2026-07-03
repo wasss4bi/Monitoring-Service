@@ -1,0 +1,21 @@
+info:
+  name: Add rule
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors/{{monitorId}}/rule"
+  body:
+    type: json
+    data: |-
+      {
+        "path": "price",
+        "operator": ">=",
+        "value": 100,
+        "description": "price >= 100"
+      }
+  auth: inherit
+
+docs: |-
+  Changes to rules or the threshold supersede in-flight checks and reschedule active monitors.
+  bootstrap_rules is operator-owned in PostgreSQL; HTTP changes are disabled with 403 pending admin authorization.

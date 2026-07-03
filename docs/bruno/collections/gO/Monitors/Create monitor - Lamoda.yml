@@ -1,0 +1,56 @@
+info:
+  name: Create monitor - Lamoda
+  type: http
+  seq: 30
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Lamoda: Lacoste MP002XM0281A, цена <= 28990 ₽ и наличие",
+        "url": "https://www.lamoda.ru/api/v1/product/get?sku=MP002XM0281A&is_hybrid_supported=true&size_id=0",
+        "page_url": "https://www.lamoda.ru/p/mp002xm0281a/shoes-lacoste-krossovki/",
+        "json_source": {
+          "script_contains": "__NUXT__",
+          "object_key": "product",
+          "match": {
+            "path": "sku",
+            "value": "MP002XM0281A"
+          }
+        },
+        "type": "json",
+        "path_type": "json",
+        "session_mode": "managed",
+        "rules": [
+          {
+            "path": "price",
+            "operator": "<=",
+            "value": 28990,
+            "description": "Цена не выше 28990 ₽"
+          },
+          {
+            "path": "sizes[9].stock_quantity",
+            "operator": ">=",
+            "value": 1,
+            "description": "Товар в наличии"
+          }
+        ]
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+docs: |-
+  Без ручного Idempotency-Key коллекция создаёт новый UUID при каждой отправке. Для повтора укажите прежний ключ из Timeline.
+  target_hostname должен существовать и быть активным; Telegram-контакт — активным и подтверждённым.
+  Используется managed: сервис автоматически создаёт анонимную сессию; переменные *Session не нужны.

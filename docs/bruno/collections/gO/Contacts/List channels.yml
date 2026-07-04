@@ -1,0 +1,19 @@
+info:
+  name: List notification channels
+  type: http
+  seq: 1
+  tags:
+    - Contacts
+
+http:
+  method: GET
+  url: "{{baseUrl}}/contacts"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

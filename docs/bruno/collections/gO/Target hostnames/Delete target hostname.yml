@@ -1,0 +1,17 @@
+info:
+  name: Delete target hostname
+  type: http
+  seq: 6
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/target-hostnames/1"
+  auth:
+    type: bearer
+    token: "{{adminAccessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

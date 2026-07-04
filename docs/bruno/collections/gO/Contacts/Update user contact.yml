@@ -1,0 +1,29 @@
+info:
+  name: Update user notification contact
+  type: http
+  seq: 9
+  tags:
+    - Contacts
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/me/contacts/{{userContactId}}"
+  body:
+    type: json
+    data: |-
+      {
+        "contact": "123456789",
+        "is_active": true
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  Changing the contact resets verification and activation; an unverified contact cannot be activated.

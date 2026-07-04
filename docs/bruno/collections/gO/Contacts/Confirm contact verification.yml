@@ -1,0 +1,18 @@
+info:
+  name: Confirm contact verification
+  type: http
+  seq: 12
+  tags:
+    - Contacts
+http:
+  method: POST
+  url: "{{baseUrl}}/me/contacts/{{userContactId}}/verification/confirm"
+  body:
+    type: json
+    data: |-
+      { "code": "123456" }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+docs: |-
+  Enter the code received by email or Telegram. Five incorrect attempts invalidate it. A verified contact remains inactive until enabled separately.

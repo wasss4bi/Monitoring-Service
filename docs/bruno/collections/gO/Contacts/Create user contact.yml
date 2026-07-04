@@ -1,0 +1,30 @@
+info:
+  name: Create user notification contact
+  type: http
+  seq: 7
+  tags:
+    - Contacts
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/contacts"
+  body:
+    type: json
+    data: |-
+      {
+        "contact_id": 1,
+        "contact": "713658464"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  An unknown contact_id returns HTTP 400 with an error for contact_id.

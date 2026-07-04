@@ -1,0 +1,25 @@
+info:
+  name: Update bootstrap policy as admin
+  type: http
+  seq: 8
+http:
+  method: PATCH
+  url: "{{baseUrl}}/target-hostnames/{{targetHostnameId}}"
+  auth:
+    type: bearer
+    token: "{{adminAccessToken}}"
+  body:
+    type: json
+    data: |-
+      {
+        "bootstrap_rules": [
+          {
+            "origin": "https://example.com",
+            "path_prefix": "/challenge/",
+            "methods": [
+              "POST"
+            ]
+          }
+        ]
+      }
+docs: Use a manually verified origin/path prefix for the specific site. [] clears exceptions. Ordinary monitoring remains GET-only; private destinations remain blocked.

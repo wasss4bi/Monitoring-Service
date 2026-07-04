@@ -1,0 +1,23 @@
+info:
+  name: Reset target session
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{baseUrl}}/target-hostnames/5/reset-session"
+  auth:
+    type: bearer
+    token: "{{adminAccessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Admin only. Resets managed monitor sessions for this hostname, fences old results
+  and schedules active monitors again. Provided sessions and old Docker volumes
+  are retained. Stopped/terminal monitors are not resumed.

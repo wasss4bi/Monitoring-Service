@@ -1,0 +1,28 @@
+info:
+  name: Update target hostname
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/target-hostnames/1"
+  body:
+    type: json
+    data: |-
+      {
+        "limit_per_minute": 30,
+        "is_active": true
+      }
+  auth:
+    type: bearer
+    token: "{{adminAccessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  Changes to rules or the threshold supersede in-flight checks and reschedule active monitors.
+  bootstrap_rules is operator-owned in PostgreSQL; HTTP changes are disabled with 403 pending admin authorization.

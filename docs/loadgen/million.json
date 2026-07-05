@@ -1,0 +1,18 @@
+{
+  "mode": "large",
+  "counts": {
+    "users": 500000,
+    "target_hostnames": 1000000,
+    "monitored_endpoints": 1000000,
+    "monitors": 1000000,
+    "monitor_rules": 1500000,
+    "endpoint_fetches": 1250000,
+    "monitor_fetch_evaluations": 1000000,
+    "notifications": 800000,
+    "outbox_events": 0,
+    "processed_messages": 1000000,
+    "idempotency_keys": 1000000
+  },
+  "batch_size": 10000,
+  "seed": 42
+}

@@ -1,0 +1,46 @@
+{
+  "version": "v0.5.0",
+  "commit": "92496421fa43c4dd993542ad3c75a153480dbe6b",
+  "images": [
+    {
+      "component": "browserless",
+      "image": "ghcr.io/wasss4bi/values-from-body-fetcher-browserless",
+      "digest": "sha256:4e6741e72b2f81e26277bd7359c5179a4bcbc808d838f9d4719ae53cd4f1ced6",
+      "commit": "92496421fa43c4dd993542ad3c75a153480dbe6b",
+      "version": "v0.5.0",
+      "visibility": "private"
+    },
+    {
+      "component": "fetcher",
+      "image": "ghcr.io/wasss4bi/values-from-body-fetcher",
+      "digest": "sha256:4174ceef36c8443ca3c267ea70e0b34778d18dbbb5b0ff65a09bc5b66843e6b6",
+      "commit": "92496421fa43c4dd993542ad3c75a153480dbe6b",
+      "version": "v0.5.0",
+      "visibility": "private"
+    },
+    {
+      "component": "html",
+      "image": "ghcr.io/wasss4bi/values-from-body-fetcher-html",
+      "digest": "sha256:b23349a8821030e35f2c9352eeceb8faaa8bd269ebdbfcc92bc7efa27361166d",
+      "commit": "92496421fa43c4dd993542ad3c75a153480dbe6b",
+      "version": "v0.5.0",
+      "visibility": "private"
+    },
+    {
+      "component": "parser",
+      "image": "ghcr.io/wasss4bi/values-from-body-fetcher-parser",
+      "digest": "sha256:d90b73c20ed7c0c043f1dbc0e7c90b84cc90d05db4076e7762c0b0a325e10f79",
+      "commit": "92496421fa43c4dd993542ad3c75a153480dbe6b",
+      "version": "v0.5.0",
+      "visibility": "private"
+    },
+    {
+      "component": "squid",
+      "image": "ghcr.io/wasss4bi/values-from-body-fetcher-squid",
+      "digest": "sha256:44a73662e24d7f89964bdc249b4296b6274b38a3713c9132acb9986e8b7e0947",
+      "commit": "92496421fa43c4dd993542ad3c75a153480dbe6b",
+      "version": "v0.5.0",
+      "visibility": "private"
+    }
+  ]
+}

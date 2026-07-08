@@ -1,0 +1,13 @@
+services:
+  monitoring_service:
+    build:
+      context: .
+      dockerfile: ./docker/go/Dockerfile.dev
+    volumes:
+      - .:/app
+      - go_build_cache:/root/.cache/go-build
+    command: ["air", "-c", ".air.toml"]
+
+volumes:
+  go_module_cache:
+  go_build_cache:

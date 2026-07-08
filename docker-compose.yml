@@ -1,0 +1,421 @@
+services:
+  browserless:
+    image: ghcr.io/wasss4bi/values-from-body-fetcher-browserless:v0.5.0@sha256:4e6741e72b2f81e26277bd7359c5179a4bcbc808d838f9d4719ae53cd4f1ced6
+    init: true
+    shm_size: 512m
+    stop_grace_period: 15s
+    environment:
+      TOKEN: ${BROWSERLESS_TOKEN:?required}
+      MAX_CONCURRENT_SESSIONS: "2"
+      QUEUE_LENGTH: "0"
+      CONNECTION_TIMEOUT: "-1"
+      PREBOOT_CHROME: "false"
+      ENABLE_XVFB: "true"
+      DEFAULT_HEADLESS: "false"
+      DEFAULT_STEALTH: "true"
+      DEFAULT_LAUNCH_ARGS: '["--proxy-server=http://squid:3128","--proxy-bypass-list=<-loopback>","--disable-quic","--disable-features=ServiceWorker","--disable-application-cache"]'
+      DEBUG: -browserless*
+      TZ: ${BROWSER_TIMEZONE:-UTC}
+    volumes:
+      - fetcher_profiles:/var/lib/monitoring_service/browserless-profiles
+    networks:
+      - fetcher_engines
+      - browser_egress
+    mem_limit: 2g
+    pids_limit: 512
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - require("http").get("http://127.0.0.1:3000/pressure?token="+process.env.TOKEN,r=>{r.resume();process.exit(r.statusCode===200?0:1)}).on("error",()=>process.exit(1))
+      interval: 5s
+      timeout: 3s
+      start_period: 15s
+      retries: 10
+    depends_on:
+      squid:
+        condition: service_started
+  monitoring_service:
+    image: monitoring_service-monitoring_service
+    build:
+      context: .
+      dockerfile: ./docker/go/Dockerfile
+      secrets:
+        - go_module_github_token
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      METRICS_PORT: "9100"
+    ports:
+      - ${APP_PORT:-8080}:${APP_PORT:-8080}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "9100"
+  outbox_publisher:
+    image: monitoring_service-monitoring_service
+    env_file:
+      - .env
+    command:
+      - /usr/local/bin/outbox-publisher
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://monitoring_service:monitoring_service_password@rabbitmq:5672/}
+      METRICS_PORT: "9101"
+    expose:
+      - "9101"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+  monitor_scheduler:
+    image: monitoring_service-monitoring_service
+    env_file:
+      - .env
+    command:
+      - /usr/local/bin/monitor-scheduler
+    environment:
+      METRICS_PORT: "9102"
+    expose:
+      - "9102"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  endpoint_fetch_worker:
+    image: monitoring_service-monitoring_service
+    env_file:
+      - .env
+    command:
+      - /usr/local/bin/endpoint-fetch-worker
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://monitoring_service:monitoring_service_password@rabbitmq:5672/}
+      METRICS_PORT: "9103"
+      FETCHER_ADDRESS: fetcher:8443
+      FETCHER_SERVER_NAME: fetcher
+      FETCHER_CA_FILE: /run/fetcher-certs/ca.pem
+      FETCHER_CLIENT_CERT_FILE: /run/fetcher-certs/monitoring.pem
+      FETCHER_CLIENT_KEY_FILE: /run/fetcher-certs/monitoring.key
+    expose:
+      - "9103"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes: &a1
+      - ${FETCHER_CERT_DIR:-./tmp/fetcher-certs}/ca.pem:/run/fetcher-certs/ca.pem:ro
+      - ${FETCHER_CERT_DIR:-./tmp/fetcher-certs}/monitoring.pem:/run/fetcher-certs/monitoring.pem:ro
+      - ${FETCHER_CERT_DIR:-./tmp/fetcher-certs}/monitoring.key:/run/fetcher-certs/monitoring.key:ro
+    networks:
+      - default
+  endpoint_fetch_html_worker:
+    image: monitoring_service-monitoring_service
+    env_file:
+      - .env
+    command:
+      - /usr/local/bin/endpoint-fetch-html-worker
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://monitoring_service:monitoring_service_password@rabbitmq:5672/}
+      METRICS_PORT: "9105"
+      FETCHER_ADDRESS: fetcher:8443
+      FETCHER_SERVER_NAME: fetcher
+      FETCHER_CA_FILE: /run/fetcher-certs/ca.pem
+      FETCHER_CLIENT_CERT_FILE: /run/fetcher-certs/monitoring.pem
+      FETCHER_CLIENT_KEY_FILE: /run/fetcher-certs/monitoring.key
+    expose:
+      - "9105"
+    networks:
+      - default
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes: *a1
+  parser:
+    image: ghcr.io/wasss4bi/values-from-body-fetcher-parser:v0.5.0@sha256:d90b73c20ed7c0c043f1dbc0e7c90b84cc90d05db4076e7762c0b0a325e10f79
+    init: true
+    stop_grace_period: 2m
+    shm_size: 512m
+    environment:
+      CHROME_PATH: /usr/bin/google-chrome-stable
+      BROWSERLESS_URL: ws://browserless:3000?token=${BROWSERLESS_TOKEN:?required}
+      PARSER_PROXY_URL: http://squid:3128
+      PARSER_PROFILE_DIR: /var/lib/monitoring_service/browserless-profiles
+      PARSER_BROWSER_LANGUAGES: ${BROWSER_LANGUAGES:-ru-RU,ru}
+      PARSER_PORT: "8080"
+      PARSER_MAX_BROWSER_CONTEXTS: "1"
+      PARSER_BOOTSTRAP_TIMEOUT_MS: "99000"
+      PARSER_UPSTREAM_TIMEOUT_MS: "4500"
+      PARSER_MAX_REQUEST_BYTES: "2097152"
+      PARSER_MAX_RESPONSE_BYTES: "5242880"
+      TZ: ${BROWSER_TIMEZONE:-UTC}
+    volumes:
+      - fetcher_profiles:/var/lib/monitoring_service/browserless-profiles
+    networks:
+      - fetcher_engines
+      - browser_egress
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -fsS
+        - http://127.0.0.1:8080/healthz
+      interval: 5s
+      timeout: 3s
+      start_period: 15s
+      retries: 10
+    depends_on:
+      browserless:
+        condition: service_healthy
+      squid:
+        condition: service_started
+  playwright:
+    image: ghcr.io/wasss4bi/values-from-body-fetcher-html:v0.5.0@sha256:b23349a8821030e35f2c9352eeceb8faaa8bd269ebdbfcc92bc7efa27361166d
+    user: 1000:1000
+    init: true
+    stop_grace_period: 45s
+    shm_size: 512m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      BROWSERLESS_URL: ws://browserless:3000?token=${BROWSERLESS_TOKEN:?required}
+      PLAYWRIGHT_PROXY_URL: http://squid:3128
+      PLAYWRIGHT_USER_DATA_DIR: /var/lib/monitoring_service/browserless-profiles/html
+      PLAYWRIGHT_PAGE_TIMEOUT_MS: "99000"
+      PLAYWRIGHT_MAX_CONCURRENT_PAGES: "1"
+      PLAYWRIGHT_MAX_HTML_BYTES: "5242880"
+      TZ: ${BROWSER_TIMEZONE:-UTC}
+    volumes:
+      - fetcher_profiles:/var/lib/monitoring_service/browserless-profiles
+    networks:
+      - fetcher_engines
+      - browser_egress
+    mem_limit: 1g
+    pids_limit: 256
+    depends_on:
+      browserless:
+        condition: service_healthy
+      squid:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch("http://127.0.0.1:3000/healthz",{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.status===200?0:1)).catch(()=>process.exit(1))
+      interval: 5s
+      timeout: 3s
+      start_period: 20s
+      retries: 10
+  squid:
+    image: ghcr.io/wasss4bi/values-from-body-fetcher-squid:v0.5.0@sha256:44a73662e24d7f89964bdc249b4296b6274b38a3713c9132acb9986e8b7e0947
+    networks:
+      - browser_egress
+      - fetcher_outbound
+  endpoint_fetch_queue_migrator:
+    image: monitoring_service-monitoring_service
+    profiles:
+      - migration
+    env_file:
+      - .env
+    command:
+      - /usr/local/bin/endpoint-fetch-queue-migrator
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://monitoring_service:monitoring_service_password@rabbitmq:5672/}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  notification_worker:
+    image: monitoring_service-monitoring_service
+    env_file:
+      - .env
+    command:
+      - /usr/local/bin/notification-worker
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://monitoring_service:monitoring_service_password@rabbitmq:5672/}
+      METRICS_PORT: "9104"
+    expose:
+      - "9104"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+  monitoring_cleanup:
+    image: monitoring_service-monitoring_service
+    env_file:
+      - .env
+    command:
+      - /usr/local/bin/monitoring-cleanup
+    depends_on:
+      postgres:
+        condition: service_healthy
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-monitoring_service}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-monitoring_service_password}
+    ports:
+      - ${RABBITMQ_AMQP_PORT:-5672}:5672
+      - ${RABBITMQ_MANAGEMENT_PORT:-15672}:15672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+    expose:
+      - "15692"
+    healthcheck:
+      test:
+        - CMD
+        - rabbitmq-diagnostics
+        - -q
+        - ping
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-monitoring_service}
+      POSTGRES_USER: ${POSTGRES_USER:-monitoring_service}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-monitoring_service_password}
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER:-monitoring_service} -d ${POSTGRES_DB:-monitoring_service}
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:8.4-alpine
+    ports:
+      - ${REDIS_PORT:-6379}:6379
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.80.2
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: redis:${REDIS_PORT:-6379}
+    expose:
+      - "9121"
+    depends_on:
+      - redis
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+  grafana:
+    image: grafana/grafana
+    ports:
+      - ${GRAFANA_PORT:-3010}:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+  loki:
+    image: grafana/loki
+    volumes:
+      - ./docker/loki/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+    ports:
+      - 3100:3100
+  alloy:
+    image: grafana/alloy:latest
+    volumes:
+      - ./docker/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - run
+      - /etc/alloy/config.alloy
+    depends_on:
+      - loki
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+  fetcher:
+    image: ghcr.io/wasss4bi/values-from-body-fetcher:v0.5.0@sha256:4174ceef36c8443ca3c267ea70e0b34778d18dbbb5b0ff65a09bc5b66843e6b6
+    init: true
+    stop_grace_period: 15s
+    environment:
+      FETCHER_REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      FETCHER_LISTEN_ADDRESS: :8443
+      FETCHER_CA_FILE: /run/certs/ca.pem
+      FETCHER_SERVER_CERT_FILE: /run/certs/fetcher.pem
+      FETCHER_SERVER_KEY_FILE: /run/certs/fetcher.key
+      FETCHER_MONITORING_NAME: ${FETCHER_CLIENT_IDENTITY:-monitoring}
+      FETCHER_PARSER_URL: http://parser:8080
+      FETCHER_HTML_URL: http://playwright:3000
+      METRICS_PORT: "9106"
+    volumes:
+      - ${FETCHER_CERT_DIR:-./tmp/fetcher-certs}/ca.pem:/run/certs/ca.pem:ro
+      - ${FETCHER_CERT_DIR:-./tmp/fetcher-certs}/fetcher.pem:/run/certs/fetcher.pem:ro
+      - ${FETCHER_CERT_DIR:-./tmp/fetcher-certs}/fetcher.key:/run/certs/fetcher.key:ro
+    networks:
+      - default
+      - fetcher_engines
+    expose:
+      - "8443"
+      - "9106"
+  dependency_health_worker:
+    image: monitoring_service-monitoring_service
+    env_file:
+      - .env
+    command:
+      - /usr/local/bin/dependency-health-worker
+    environment:
+      FETCHER_ADDRESS: fetcher:8443
+      FETCHER_SERVER_NAME: fetcher
+      FETCHER_CA_FILE: /run/fetcher-certs/ca.pem
+      FETCHER_CLIENT_CERT_FILE: /run/fetcher-certs/monitoring.pem
+      FETCHER_CLIENT_KEY_FILE: /run/fetcher-certs/monitoring.key
+      FETCHER_ADMIN_TELEGRAM_CHAT_IDS: ${FETCHER_ADMIN_TELEGRAM_CHAT_IDS:-}
+    volumes: *a1
+    depends_on:
+      postgres:
+        condition: service_healthy
+secrets:
+  go_module_github_token:
+    environment: GO_MODULE_GITHUB_TOKEN
+volumes:
+  postgres_data: null
+  prometheus_data: null
+  grafana_data: null
+  loki_data: null
+  rabbitmq_data: null
+  playwright_profile: null
+  parser_profiles: null
+  browserless_profiles: null
+  fetcher_profiles: null
+networks:
+  browser_egress:
+    internal: true
+  fetcher_engines:
+    internal: true
+  fetcher_outbound: null

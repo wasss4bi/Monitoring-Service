@@ -1,0 +1,178 @@
+name: CI and deployment
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test -d test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+      redis:
+        image: redis:8.4-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+      rabbitmq:
+        image: rabbitmq:4-management
+        env:
+          RABBITMQ_DEFAULT_USER: test
+          RABBITMQ_DEFAULT_PASS: test
+        ports: ["5672:5672"]
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 5s --health-timeout 5s --health-retries 24
+    env:
+      GOPRIVATE: github.com/wasss4bi/values-from-body-fetcher
+      GO_MODULE_GITHUB_TOKEN: ${{ secrets.GO_MODULE_GITHUB_TOKEN }}
+      DATABASE_URL: postgres://test:test@localhost:5432/test?sslmode=disable
+      INTEGRATION_DATABASE_URL: postgres://test:test@localhost:5432/test?sslmode=disable
+      INTEGRATION_REDIS_URL: redis://localhost:6379/0
+      INTEGRATION_RABBITMQ_URL: amqp://test:test@localhost:5672/
+      RABBITMQ_URL: amqp://test:test@localhost:5672/
+      RABBITMQ_ISOLATED_TESTS: "1"
+      MONITORING_SERVICE_CURRENT_DB_TESTS: "1"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Configure private module access
+        run: |
+          test -n "$GO_MODULE_GITHUB_TOKEN"
+          cat > "$RUNNER_TEMP/git-askpass" <<'EOF'
+          #!/bin/sh
+          case "$1" in
+            *Username*) printf '%s\n' x-access-token ;;
+            *Password*) printf '%s\n' "$GO_MODULE_GITHUB_TOKEN" ;;
+            *) exit 1 ;;
+          esac
+          EOF
+          chmod 700 "$RUNNER_TEMP/git-askpass"
+          echo "GIT_ASKPASS=$RUNNER_TEMP/git-askpass" >> "$GITHUB_ENV"
+          echo 'GIT_TERMINAL_PROMPT=0' >> "$GITHUB_ENV"
+      - name: Go linters
+        uses: golangci/golangci-lint-action@v9.1.0
+        with:
+          version: v2.12.2
+      - name: Prepare load generator test data
+        env:
+          ADMIN_EMAIL: fixture-admin@example.com
+          ADMIN_PASSWORD: fixture-admin-password-strong
+          LOADGEN_DATABASE_URL: postgres://loadgen:test@localhost:5432/ci_loadtest?sslmode=disable
+          LOADGEN_ENV: test
+        run: |
+          docker exec '${{ job.services.postgres.id }}' psql -U test -d test -v ON_ERROR_STOP=1 -c "CREATE ROLE loadgen LOGIN PASSWORD 'test'"
+          docker exec '${{ job.services.postgres.id }}' psql -U test -d test -v ON_ERROR_STOP=1 -c "CREATE DATABASE ci_loadtest OWNER loadgen"
+          docker exec '${{ job.services.postgres.id }}' psql -U test -d test -v ON_ERROR_STOP=1 -c "COMMENT ON DATABASE ci_loadtest IS 'monitoring_service dedicated synthetic loadtest v1'"
+          DATABASE_URL="$LOADGEN_DATABASE_URL" go run ./cmd/migration
+          cat > "$RUNNER_TEMP/loadgen.json" <<'EOF'
+          {"mode":"large","counts":{"users":100,"target_hostnames":10,"monitored_endpoints":1000,"monitors":2000,"monitor_rules":3000,"endpoint_fetches":2500,"monitor_fetch_evaluations":2000,"notifications":1000,"outbox_events":0,"processed_messages":1000,"idempotency_keys":1000}}
+          EOF
+          go run ./cmd/loadgen --config="$RUNNER_TEMP/loadgen.json" --report="$RUNNER_TEMP/loadgen-report.json"
+          echo "LOADGEN_TEST_DATABASE_URL=$LOADGEN_DATABASE_URL" >> "$GITHUB_ENV"
+      - name: Go unit and integration tests
+        env:
+          ADMIN_EMAIL: fixture-admin@example.com
+          ADMIN_PASSWORD: fixture-admin-password-strong
+        run: |
+          go run ./cmd/migration
+          go test -tags=integration -count=1 ./...
+      - name: Bruno script tests
+        run: node --test tools/*.test.cjs
+      - name: Build helper tests
+        shell: pwsh
+        run: ./tools/build-go.test.ps1
+      - name: Validate server Compose
+        env:
+          MONITORING_IMAGE: ghcr.io/example/monitoring-service:test
+          BROWSERLESS_TOKEN: ci-test
+          GRAFANA_ADMIN_USER: ci-admin
+          GRAFANA_ADMIN_PASSWORD: ci-password
+        run: |
+          cp .env.example .env
+          docker compose -f docker-compose.server.yml config --quiet
+
+  image:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/prod'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - id: meta
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+        env:
+          GO_MODULE_GITHUB_TOKEN: ${{ secrets.GO_MODULE_GITHUB_TOKEN }}
+        with:
+          context: .
+          file: docker/go/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.image }}
+          secret-envs: |
+            go_module_github_token=GO_MODULE_GITHUB_TOKEN
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/prod'
+    needs: image
+    runs-on: ubuntu-latest
+    concurrency:
+      group: monitoring-service-prod
+      cancel-in-progress: false
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+      GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+      MONITORING_IMAGE: ${{ needs.image.outputs.image }}
+      GHCR_USER: ${{ github.repository_owner }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Configure SSH
+        run: |
+          set -eu
+          test -n "$DEPLOY_HOST" && test -n "$DEPLOY_USER" && test -n "$DEPLOY_PATH"
+          test -n "$DEPLOY_SSH_KEY" && test -n "$DEPLOY_KNOWN_HOSTS" && test -n "$GHCR_READ_TOKEN"
+          [[ "$DEPLOY_PATH" =~ ^/[a-zA-Z0-9_./-]+$ ]] && [[ "$DEPLOY_PATH" != *..* ]]
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+      - name: Upload deployment files and deploy
+        run: |
+          set -eu
+          target="$DEPLOY_USER@$DEPLOY_HOST"
+          ssh -o BatchMode=yes "$target" "mkdir -p '$DEPLOY_PATH'"
+          tar -cf - docker-compose.server.yml docker tools/deploy-server.sh | ssh -o BatchMode=yes "$target" "tar -xf - -C '$DEPLOY_PATH'"
+          printf '%s\n' "$GHCR_READ_TOKEN" | ssh -o BatchMode=yes "$target" "cd '$DEPLOY_PATH' && bash tools/deploy-server.sh '$MONITORING_IMAGE' '$GHCR_USER'"

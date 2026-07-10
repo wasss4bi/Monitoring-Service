@@ -21,7 +21,7 @@ flowchart LR
     Delivery --> DB
 ```
 
-Контракт подключён напрямую через `github.com/wasss4bi/values-from-body-fetcher@v0.5.0`; локальных protobuf-копий нет. Monitoring-Service владеет пользователями/ролями, разрешёнными hostname и bootstrap policy, мониторами, сравнением, расписанием, retry, inbox/outbox и доставкой. Текущая роль читается из БД на каждом запросе; Casbin policy встроена в приложение. Owner проверяется по JWT и ID ресурса.
+Контракт подключён напрямую через `github.com/wasss4bi/values-from-body-fetcher@v0.6.0`; локальных protobuf-копий нет. Monitoring-Service владеет пользователями/ролями, разрешёнными hostname и bootstrap policy, мониторами, сравнением, расписанием, retry, inbox/outbox и доставкой. Текущая роль читается из БД на каждом запросе; Casbin policy встроена в приложение. Owner проверяется по JWT и ID ресурса.
 
 Fetcher не получает доступ к PostgreSQL, RabbitMQ, провайдерам уведомлений или ключу шифрования сессий. Он возвращает значения, provenance, ошибки и обновлённую анонимную сессию. Детали HTTP/DNS, JSON/HTML extraction, scalar cache, Node engines, Browserless, профили и Squid находятся в отдельном репозитории. Экземпляр stack отдельный для каждого проекта; все пять образов закреплены по версии и digest.
 

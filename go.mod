@@ -15,7 +15,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rabbitmq/amqp091-go v1.10.0
-	github.com/wasss4bi/values-from-body-fetcher v0.5.0
+	github.com/wasss4bi/values-from-body-fetcher v0.6.0
 	golang.org/x/net v0.54.0
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11

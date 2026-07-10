@@ -1,7 +1,7 @@
 # Fetcher в Monitoring-Service
 
 Авторитетный контракт и реализация находятся в приватном [values-from-body-fetcher](https://github.com/wasss4bi/values-from-body-fetcher).
-Monitoring-Service импортирует `github.com/wasss4bi/values-from-body-fetcher/api/fetcher/v1` из версии `v0.5.0`, закреплённой в `go.mod` и `go.sum`. Локальных generated stubs и proto source нет. Здесь остаются клиентский mTLS transport и бизнес-адаптер результатов.
+Monitoring-Service импортирует `github.com/wasss4bi/values-from-body-fetcher/api/fetcher/v1` из версии `v0.6.0`, закреплённой в `go.mod` и `go.sum`. Локальных generated stubs и proto source нет. Здесь остаются клиентский mTLS transport и бизнес-адаптер результатов.
 
 ## Доступ к приватному Go module
 

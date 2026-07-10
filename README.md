@@ -7,7 +7,7 @@
 
 1. Настройте локальный `.env` по `.env.example`. Обязательны JWT secret, ключ шифрования сессий, `ADMIN_EMAIL`, `ADMIN_PASSWORD` и `BROWSERLESS_TOKEN`.
 2. Авторизуйте Docker для приватного GHCR: `docker login ghcr.io -u wasss4bi` с правом `read:packages`. Токен не хранится в Git.
-3. Подготовьте сертификаты и проверьте версии по [инструкции Fetcher](docs/fetcher/README.md). Контракт импортируется как приватный Go module `github.com/wasss4bi/values-from-body-fetcher@v0.5.0`; для его скачивания нужен GitHub-доступ к репозиторию, отдельно от GHCR pull.
+3. Подготовьте сертификаты и проверьте версии по [инструкции Fetcher](docs/fetcher/README.md). Контракт импортируется как приватный Go module `github.com/wasss4bi/values-from-body-fetcher@v0.6.0`; для его скачивания нужен GitHub-доступ к репозиторию, отдельно от GHCR pull.
 4. Соберите приложение и примените миграции отдельной командой:
 
 ```powershell

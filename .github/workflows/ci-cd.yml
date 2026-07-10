@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16.14-alpine3.22@sha256:786dab398303b8ce7cb76b407bb21ef2e4dfbbbd4c6abcf3d29b3130467ffdbc
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
@@ -22,13 +22,13 @@ jobs:
           --health-cmd "pg_isready -U test -d test"
           --health-interval 5s --health-timeout 5s --health-retries 12
       redis:
-        image: redis:8.4-alpine
+        image: redis:8.4.3-alpine@sha256:52e68c6542d1b658a207ba63e7545963ec7cde6c7efc8948108edfa7e339ff73
         ports: ["6379:6379"]
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 5s --health-timeout 5s --health-retries 12
       rabbitmq:
-        image: rabbitmq:4-management
+        image: rabbitmq:4.2.7-management@sha256:9b931a1854b6679b67119cfbd673c02155646d93ec5618601fc258c875289684
         env:
           RABBITMQ_DEFAULT_USER: test
           RABBITMQ_DEFAULT_PASS: test

@@ -1,7 +1,7 @@
 name: monitoring_service-loadgen
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.14-alpine3.22@sha256:786dab398303b8ce7cb76b407bb21ef2e4dfbbbd4c6abcf3d29b3130467ffdbc
     shm_size: 1gb
     environment:
       POSTGRES_DB: monitoring_service_loadtest

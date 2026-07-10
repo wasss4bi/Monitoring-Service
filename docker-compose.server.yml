@@ -9,7 +9,7 @@ services:
     command:
       - /usr/local/bin/migration
   browserless:
-    image: ghcr.io/wasss4bi/values-from-body-fetcher-browserless:v0.5.0@sha256:4e6741e72b2f81e26277bd7359c5179a4bcbc808d838f9d4719ae53cd4f1ced6
+    image: ghcr.io/wasss4bi/values-from-body-fetcher-browserless:v0.6.0@sha256:6a068fb02e457d5856b077df0861346f11bc1927aebe1c49bdf56346d5f7e646
     restart: unless-stopped
     init: true
     shm_size: 512m
@@ -157,7 +157,7 @@ services:
         condition: service_healthy
     volumes: *a1
   parser:
-    image: ghcr.io/wasss4bi/values-from-body-fetcher-parser:v0.5.0@sha256:d90b73c20ed7c0c043f1dbc0e7c90b84cc90d05db4076e7762c0b0a325e10f79
+    image: ghcr.io/wasss4bi/values-from-body-fetcher-parser:v0.6.0@sha256:c56604780e059cd978dd4bd35b465b544661164105f17847425c56350813bfe0
     restart: unless-stopped
     init: true
     stop_grace_period: 2m
@@ -196,7 +196,7 @@ services:
       squid:
         condition: service_started
   playwright:
-    image: ghcr.io/wasss4bi/values-from-body-fetcher-html:v0.5.0@sha256:b23349a8821030e35f2c9352eeceb8faaa8bd269ebdbfcc92bc7efa27361166d
+    image: ghcr.io/wasss4bi/values-from-body-fetcher-html:v0.6.0@sha256:97cd3039f4fc8775625d2954cf968f5ae4ad4abbc84cd53ee298d5d7b0816a37
     restart: unless-stopped
     user: 1000:1000
     init: true
@@ -237,7 +237,7 @@ services:
       start_period: 20s
       retries: 10
   squid:
-    image: ghcr.io/wasss4bi/values-from-body-fetcher-squid:v0.5.0@sha256:44a73662e24d7f89964bdc249b4296b6274b38a3713c9132acb9986e8b7e0947
+    image: ghcr.io/wasss4bi/values-from-body-fetcher-squid:v0.6.0@sha256:30ed2f6915e5cc4161c16fbbc837429d568cda1dd7127e64c725ea1175b27c5b
     restart: unless-stopped
     networks:
       - browser_egress
@@ -290,7 +290,7 @@ services:
       postgres:
         condition: service_healthy
   rabbitmq:
-    image: rabbitmq:4-management
+    image: rabbitmq:4.2.7-management@sha256:9b931a1854b6679b67119cfbd673c02155646d93ec5618601fc258c875289684
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-monitoring_service}
@@ -310,7 +310,7 @@ services:
       timeout: 5s
       retries: 10
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.14-alpine3.22@sha256:786dab398303b8ce7cb76b407bb21ef2e4dfbbbd4c6abcf3d29b3130467ffdbc
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-monitoring_service}
@@ -326,7 +326,7 @@ services:
       timeout: 5s
       retries: 5
   redis:
-    image: redis:8.4-alpine
+    image: redis:8.4.3-alpine@sha256:52e68c6542d1b658a207ba63e7545963ec7cde6c7efc8948108edfa7e339ff73
     restart: unless-stopped
     healthcheck:
       test:
@@ -339,7 +339,7 @@ services:
     networks:
       - redis_private
   redis-exporter:
-    image: oliver006/redis_exporter:v1.80.2
+    image: oliver006/redis_exporter:v1.80.2@sha256:33fd1d09c3ba5d2354bdedfad62b06ecc54f50680823b1cf801dac9e1fd9d387
     restart: unless-stopped
     environment:
       REDIS_ADDR: redis:6379
@@ -351,13 +351,13 @@ services:
       - default
       - redis_private
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:v3.12.0@sha256:69f5241418838263316593f7274a304b095c40bcf22e57272865da91bd60a8ac
     restart: unless-stopped
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:13.0.1@sha256:0f86bada30d65ef9d0183b90c1e2682ac92d53d95da8bed322b984ea78a4a73a
     restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:?required}
@@ -369,7 +369,7 @@ services:
       - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
   loki:
-    image: grafana/loki
+    image: grafana/loki:3.7.2@sha256:191d4fdfb7264f16989f0a57f320872620a5a7c2ceeec6229212c4190ec49b86
     restart: unless-stopped
     volumes:
       - ./docker/loki/loki.yml:/etc/loki/local-config.yaml:ro
@@ -377,7 +377,7 @@ services:
     command:
       - -config.file=/etc/loki/local-config.yaml
   alloy:
-    image: grafana/alloy:latest
+    image: grafana/alloy:v1.16.2@sha256:32913cbfac652d15fa84d256a74e5ee3f71575961bb19d34796ce3838bfba693
     restart: unless-stopped
     volumes:
       - ./docker/alloy/config.alloy:/etc/alloy/config.alloy:ro
@@ -388,7 +388,7 @@ services:
     depends_on:
       - loki
   postgres_exporter:
-    image: prometheuscommunity/postgres-exporter
+    image: prometheuscommunity/postgres-exporter:v0.19.1@sha256:e96064f876226d94bb6ce48a4c4b3dd76edba91168ec1ab024e5c4b959310b0f
     restart: unless-stopped
     environment:
       DATA_SOURCE_NAME: ${DATABASE_URL}
@@ -396,7 +396,7 @@ services:
       postgres:
         condition: service_healthy
   fetcher:
-    image: ghcr.io/wasss4bi/values-from-body-fetcher:v0.5.0@sha256:4174ceef36c8443ca3c267ea70e0b34778d18dbbb5b0ff65a09bc5b66843e6b6
+    image: ghcr.io/wasss4bi/values-from-body-fetcher:v0.6.0@sha256:e6881f2aece5d8bf461fd878a80d7494c35e3320fd74e73c1a848bb2dfc43261
     restart: unless-stopped
     init: true
     stop_grace_period: 15s

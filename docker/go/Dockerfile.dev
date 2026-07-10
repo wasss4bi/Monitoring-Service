@@ -1,5 +1,5 @@
-# syntax=docker/dockerfile:1
-FROM golang:1.26-alpine
+# syntax=docker/dockerfile:1.10.0@sha256:865e5dd094beca432e8c0a1d5e1c465db5f998dca4e439981029b3b81fb39ed5
+FROM golang:1.26.4-alpine3.22@sha256:727cfc3c40be55cd1bc9a4a059406b28a059857e3be752aa9d09531e12c20c56
 WORKDIR /app
 ENV GOPRIVATE=github.com/wasss4bi/values-from-body-fetcher
 RUN apk add --no-cache git

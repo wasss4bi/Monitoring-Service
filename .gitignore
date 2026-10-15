@@ -1,0 +1,10 @@
+.gocache/
+.gomodcache/
+.env
+tmp/*
+docs/bruno/**/environments/
+
+# Retained legacy local state is outside the maintained Monitoring-Service source tree.
+services/parser/
+services/playwright/
+AGENTS.md

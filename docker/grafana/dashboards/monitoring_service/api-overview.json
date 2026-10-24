@@ -1,0 +1,20 @@
+{
+  "uid": "monitoring_service-api-overview",
+  "title": "MonitoringService / API Overview",
+  "tags": ["monitoring_service", "api", "red"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {"id": 1, "type": "stat", "title": "API target up", "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "up{job=\"monitoring-service\"}", "refId": "A"}], "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "colorMode": "value", "graphMode": "none"}},
+    {"id": 2, "type": "stat", "title": "Requests / second", "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(rate(monitoring_service_http_requests_total[5m]))", "refId": "A"}], "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "colorMode": "value", "graphMode": "none"}},
+    {"id": 3, "type": "stat", "title": "5xx ratio", "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(rate(monitoring_service_http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(monitoring_service_http_requests_total[5m])), 1)", "refId": "A"}], "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "colorMode": "value", "graphMode": "none"}},
+    {"id": 4, "type": "stat", "title": "HTTP p95", "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "histogram_quantile(0.95, sum by (le) (rate(monitoring_service_http_request_duration_seconds_bucket[5m])))", "refId": "A"}], "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "colorMode": "value", "graphMode": "none"}},
+    {"id": 5, "type": "timeseries", "title": "Request rate by route", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum by (method, route) (rate(monitoring_service_http_requests_total[5m]))", "legendFormat": "{{method}} {{route}}", "refId": "A"}]},
+    {"id": 6, "type": "timeseries", "title": "Error rate by status", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum by (status) (rate(monitoring_service_http_requests_total{status=~\"4..|5..\"}[5m]))", "legendFormat": "{{status}}", "refId": "A"}]},
+    {"id": 7, "type": "timeseries", "title": "Latency p50 / p95 / p99", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "histogram_quantile(0.50, sum by (le) (rate(monitoring_service_http_request_duration_seconds_bucket[5m])))", "legendFormat": "p50", "refId": "A"}, {"expr": "histogram_quantile(0.95, sum by (le) (rate(monitoring_service_http_request_duration_seconds_bucket[5m])))", "legendFormat": "p95", "refId": "B"}, {"expr": "histogram_quantile(0.99, sum by (le) (rate(monitoring_service_http_request_duration_seconds_bucket[5m])))", "legendFormat": "p99", "refId": "C"}]},
+    {"id": 8, "type": "timeseries", "title": "Go runtime", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "go_goroutines", "legendFormat": "goroutines", "refId": "A"}, {"expr": "process_resident_memory_bytes", "legendFormat": "RSS", "refId": "B"}, {"expr": "monitoring_service_http_requests_in_flight", "legendFormat": "HTTP in flight", "refId": "C"}]}
+  ]
+}

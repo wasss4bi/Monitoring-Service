@@ -1,0 +1,53 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "monitoring-service"
+    static_configs:
+      - targets:
+          - "monitoring_service:9100"
+
+  - job_name: "postgres"
+    static_configs:
+      - targets:
+          - "postgres_exporter:9187"
+  - job_name: "redis"
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - "redis-exporter:9121"
+
+  - job_name: "outbox-publisher"
+    static_configs:
+      - targets:
+          - "outbox_publisher:9101"
+
+  - job_name: "monitor-scheduler"
+    static_configs:
+      - targets:
+          - "monitor_scheduler:9102"
+
+  - job_name: "endpoint-fetch-worker"
+    static_configs:
+      - targets:
+          - "endpoint_fetch_worker:9103"
+
+  - job_name: "notification-worker"
+    static_configs:
+      - targets:
+          - "notification_worker:9104"
+
+  - job_name: "rabbitmq"
+    metrics_path: /metrics/detailed
+    params:
+      family:
+        - queue_coarse_metrics
+        - queue_consumer_count
+    static_configs:
+      - targets:
+          - "rabbitmq:15692"
+
+  - job_name: "fetcher"
+    static_configs:
+      - targets:
+          - "fetcher:9106"

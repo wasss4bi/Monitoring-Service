@@ -1,0 +1,20 @@
+{
+  "uid": "monitoring_service-json-monitoring",
+  "title": "MonitoringService / JSON Monitoring",
+  "tags": ["monitoring_service", "monitoring"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {"id": 1, "type": "stat", "title": "Fetch success ratio", "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(rate(monitoring_service_monitor_fetches_total{outcome=\"success\"}[5m])) / clamp_min(sum(rate(monitoring_service_monitor_fetches_total[5m])), 1)", "refId": "A"}], "fieldConfig": {"defaults": {"unit": "percentunit"}}},
+    {"id": 2, "type": "stat", "title": "Outbox pending", "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "monitoring_service_outbox_pending_events", "refId": "A"}]},
+    {"id": 3, "type": "stat", "title": "Outbox oldest age", "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "monitoring_service_outbox_oldest_pending_age_seconds", "refId": "A"}], "fieldConfig": {"defaults": {"unit": "s"}}},
+    {"id": 4, "type": "stat", "title": "Fetch workers up", "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "up{job=\"endpoint-fetch-worker\"}", "refId": "A"}]},
+    {"id": 5, "type": "timeseries", "title": "Fetches by outcome", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum by (outcome) (rate(monitoring_service_monitor_fetches_total[5m]))", "legendFormat": "{{outcome}}", "refId": "A"}]},
+    {"id": 6, "type": "timeseries", "title": "Fetch latency p95", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "histogram_quantile(0.95, sum by (le) (rate(monitoring_service_monitor_fetch_duration_seconds_bucket[5m])))", "legendFormat": "p95", "refId": "A"}], "fieldConfig": {"defaults": {"unit": "s"}}},
+    {"id": 7, "type": "timeseries", "title": "Notification delivery", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum by (outcome) (rate(monitoring_service_monitor_notifications_total[5m]))", "legendFormat": "{{outcome}}", "refId": "A"}]},
+    {"id": 8, "type": "timeseries", "title": "RabbitMQ queue depth", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "rabbitmq_detailed_queue_messages_ready", "legendFormat": "{{queue}} ready", "refId": "A"}, {"expr": "rabbitmq_detailed_queue_messages_unacknowledged", "legendFormat": "{{queue}} unacked", "refId": "B"}]}
+  ]
+}

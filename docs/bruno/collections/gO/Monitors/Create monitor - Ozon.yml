@@ -1,0 +1,50 @@
+info:
+  name: Create monitor - Ozon
+  type: http
+  seq: 27
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Ozon: iPhone 14 Pro 5892688031, обычная цена <= 58638 ₽",
+        "url": "https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=%2Fproduct%2F5892688031%2F&__rr=1&abt_att=1",
+        "type": "json",
+        "path_type": "json",
+        "session_mode": "managed",
+        "rules": [
+          {
+            "path": "price",
+            "source": {
+              "path": "widgetStates",
+              "key_prefix": "webPrice-",
+              "decode_json": true
+            },
+            "number_format": "money",
+            "operator": "<=",
+            "value": 58638,
+            "description": "Обычная цена не выше 58638 ₽"
+          }
+        ],
+        "page_url": "https://www.ozon.ru/product/5892688031/"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+docs: |-
+  Цена проверена 2026-10-29: 53638 RUB; порог 58638 RUB = цена + 5000.
+  Без ручного Idempotency-Key коллекция создаёт новый UUID при каждой отправке. Для повтора укажите прежний ключ из Timeline.
+  target_hostname должен существовать и быть активным; Telegram-контакт — активным и подтверждённым.
+  Используется managed: сервис автоматически создаёт анонимную сессию; переменные *Session не нужны.
+  Проверка 2026-10-30: monitor 19 error, bootstrap через Browserless v1 отклонён HTTP 403.

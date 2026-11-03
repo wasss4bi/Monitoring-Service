@@ -1,0 +1,19 @@
+info:
+  name: Delete user notification contact
+  type: http
+  seq: 10
+  tags:
+    - Contacts
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/me/contacts/{{userContactId}}"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

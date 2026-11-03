@@ -1,0 +1,45 @@
+info:
+  name: Create monitor - DNS
+  type: http
+  seq: 26
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "DNS: кабель Keyron, цена <= 5799 ₽",
+        "url": "https://www.dns-shop.ru/product/microdata/8a0a0362-850a-42d3-9295-b4810bdbc259/",
+        "page_url": "https://www.dns-shop.ru/product/8a0a0362850abc25/kabel-keyron-usb-type-c-usb-type-a-seryj/",
+        "type": "json",
+        "path_type": "json",
+        "session_mode": "managed",
+        "rules": [
+          {
+            "path": "data.offers.price",
+            "operator": "<=",
+            "value": 5799,
+            "description": "Цена не выше 5799 ₽"
+          }
+        ],
+        "browser_page_url": "https://www.dns-shop.ru/product/8a0a0362850abc25/kabel-keyron-usb-type-c-usb-type-a-seryj/"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+docs: |-
+  Цена проверена 2026-10-29: 799 RUB; порог 5799 RUB = цена + 5000.
+  Без ручного Idempotency-Key коллекция создаёт новый UUID при каждой отправке. Для повтора укажите прежний ключ из Timeline.
+  target_hostname должен существовать и быть активным; Telegram-контакт — активным и подтверждённым.
+  Используется managed: сервис автоматически создаёт анонимную сессию; переменные *Session не нужны.
+  Проверка 2026-10-30: monitor 18 success, уведомление отправлено через Browserless v1.

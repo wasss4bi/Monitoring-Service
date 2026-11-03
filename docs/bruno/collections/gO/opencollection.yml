@@ -1,0 +1,39 @@
+opencollection: 1.0.0
+
+info:
+  name: Go
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+request:
+  scripts:
+    - type: before-request
+      code: |-
+        if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.getMethod().toUpperCase())) {
+          const key = req.getHeader('Idempotency-Key');
+          if (key === undefined || key === null || String(key).trim() === '') {
+            req.setHeader('Idempotency-Key', bru.interpolate('{{$guid}}'));
+          }
+        }
+
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git
+    openapi:
+      - sourceUrl: D:/ITSHNICHNAYA/Projects/Go/Monitoring-Service/openapi.json
+        groupBy: tags
+        lastSyncDate: 2026-08-13T21:16:06.405Z
+        specHash: b1bdabbeaaff3cd9c25d70831745104f
+        autoCheck: true
+        autoCheckInterval: 5

@@ -1,0 +1,18 @@
+info:
+  name: Bootstrap policy forbidden for ordinary users
+  type: http
+  seq: 7
+http:
+  method: PATCH
+  url: "{{baseUrl}}/target-hostnames/1"
+  body:
+    type: json
+    data: |-
+      {
+        "bootstrap_rules": []
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+docs: |-
+  Expected: 403 Forbidden with an ordinary user JWT. Admins manage bootstrap rules through the separate authorized request.

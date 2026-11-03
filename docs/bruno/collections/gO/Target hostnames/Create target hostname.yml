@@ -1,0 +1,27 @@
+info:
+  name: Create target hostname
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/target-hostnames"
+  body:
+    type: json
+    data: |-
+      {
+        "hostname": "www.wildberries.ru",
+        "bootstrap_url": "https://www.wildberries.ru/",
+        "limit_per_minute": 5,
+        "is_active": true
+      }
+  auth:
+    type: bearer
+    token: "{{adminAccessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

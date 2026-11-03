@@ -1,0 +1,25 @@
+info:
+  name: Update notification channel
+  type: http
+  seq: 4
+  tags:
+    - Contacts
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/contacts/{{contactId}}"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "telegram"
+      }
+  auth:
+    type: bearer
+    token: "{{adminAccessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,14 @@
+info:
+  name: Request contact verification
+  type: http
+  seq: 11
+  tags:
+    - Contacts
+http:
+  method: POST
+  url: "{{baseUrl}}/me/contacts/{{userContactId}}/verification"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+docs: |-
+  Queues a code for the selected email or Telegram contact. The code expires after 10 minutes. Requests are limited to once per minute.

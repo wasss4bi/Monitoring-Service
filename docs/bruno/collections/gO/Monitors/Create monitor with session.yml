@@ -1,0 +1,41 @@
+info:
+  name: Create monitor with session
+  type: http
+  seq: 20
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Private price <= 75000",
+        "url": "{{monitorApiUrl}}",
+        "type": "json",
+        "path_type": "json",
+        "session_mode": "provided",
+        "session": {{monitorSession}},
+        "rules": [
+          {
+            "path": "price",
+            "source": {
+              "path": "widgetStates",
+              "key_prefix": "webPrice-",
+              "decode_json": true
+            },
+            "number_format": "money",
+            "operator": "<=",
+            "value": 75000,
+            "description": "Цена не выше 75000 ₽"
+          }
+        ],
+        "page_url": "{{monitorPageUrl}}"
+      }
+  auth: inherit
+
+docs: |-
+  monitorSession is a local/secret variable containing a parser v1 session JSON export.
+  Never commit real cookies, tokens or exported session files.
+  Different users can share monitorApiUrl but jobs and credentials are separate.
+  The response contains only session_mode/session_status/has_session, never the session.

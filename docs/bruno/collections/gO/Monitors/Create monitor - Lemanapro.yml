@@ -1,0 +1,45 @@
+info:
+  name: Create monitor - Lemanapro
+  type: http
+  seq: 31
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Лемана ПРО: Twin 87164932, цена за м² <= 6423 ₽",
+        "url": "https://lemanapro.ru/product/keramogranit-alma-ceramica-twin-60x60-sm-18-m-matovyy-cvet-chernyy-87164932/",
+        "type": "html",
+        "path_type": "xpath",
+        "session_mode": "managed",
+        "rules": [
+          {
+            "path": "(//main//div[@value and contains(@class,\"_pdp\") and contains(.,\"/м²\")])[1]/@value",
+            "operator": "<=",
+            "value": 6423,
+            "description": "Цена за м² не выше 6423 ₽"
+          }
+        ],
+        "page_url": "https://lemanapro.ru/product/keramogranit-alma-ceramica-twin-60x60-sm-18-m-matovyy-cvet-chernyy-87164932/"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+docs: |-
+  Цена проверена 2026-10-29: 1423 RUB; порог 6423 RUB = цена + 5000.
+  Правило читает цену за м². Цена коробки 1.8 м² — отдельное значение.
+  Без ручного Idempotency-Key коллекция создаёт новый UUID при каждой отправке. Для повтора укажите прежний ключ из Timeline.
+  target_hostname должен существовать и быть активным; Telegram-контакт — активным и подтверждённым.
+  Используется managed: сервис автоматически создаёт анонимную сессию; переменные *Session не нужны.
+  Проверка 2026-10-30: monitor 23 error, Browserless v1 получил HTTP 401.

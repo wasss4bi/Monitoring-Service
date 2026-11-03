@@ -1,0 +1,57 @@
+info:
+  name: Create embedded JSON monitor
+  type: http
+  seq: 25
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors"
+  body:
+    type: json
+    data: |-
+      {
+        "url": "https://www.lamoda.ru/api/v1/product/get?sku=MP002XM0281A&is_hybrid_supported=true&size_id=0",
+        "page_url": "https://www.lamoda.ru/p/mp002xm0281a/shoes-lacoste-krossovki/",
+        "json_source": {
+          "script_contains": "__NUXT__",
+          "object_key": "product",
+          "match": {
+            "path": "sku",
+            "value": "MP002XM0281A"
+          }
+        },
+        "type": "json",
+        "path_type": "json",
+        "name": "Embedded product price and size availability",
+        "rules": [
+          {
+            "path": "sizes[9].stock_quantity",
+            "operator": ">=",
+            "value": 1,
+            "description": "Товар в наличии"
+          },
+          {
+            "path": "price",
+            "operator": "<=",
+            "value": 24000,
+            "description": "Цена не выше 24000 ₽"
+          }
+        ]
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+# Explicit HTML source, no browser/JS execution. url is identity; only page_url is fetched.
+# Generic script marker/key/matcher configuration; no domain adapter is used.
+# Same-host HTTPS only. Rules read the selected raw JSON object.
+# json_source is shared by the endpoint: changing it for an existing URL returns 409.
+# An unavailable/ambiguous object fails rather than taking data from another product.
+# Array indices are not stable size identifiers; select the intended size for your monitor.

@@ -1,0 +1,56 @@
+info:
+  name: Create native browser JSON monitor
+  type: http
+  seq: 13
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors"
+  body:
+    type: json
+    data: |-
+      {
+        "url": "{{browserApiUrl}}",
+        "page_url": "{{browserPageUrl}}",
+        "type": "json",
+        "path_type": "json",
+        "name": "Native browser price and availability",
+        "rules": [
+          {
+            "path": "products[0].sizes[0].price.product",
+            "operator": "<=",
+            "value": 3200000,
+            "description": "Цена не выше 32000 ₽"
+          },
+          {
+            "path": "products[0].sizes[0].stocks[0].qty",
+            "operator": ">=",
+            "value": 1,
+            "description": "Товар в наличии"
+          }
+        ],
+        "browser_page_url": "{{browserPageUrl}}"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  variables:
+    - name: browserPageUrl
+      value: "https://www.wildberries.ru/catalog/1280053234/detail.aspx"
+    - name: browserApiUrl
+      value: "https://www.wildberries.ru/__internal/u-card/cards/v4/detail?appType=1&curr=rub&dest=1259570991&spp=30&hide_vflags=4294967296&mtype=257&lang=ru&ab_testing=false&nm=1280053234"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+# Example only: no marketplace adapter is embedded in the service.
+# Both URLs must use the same active, allowlisted hostname; custom headers are forbidden.
+# The page must itself issue the exact monitored GET, including query values.
+# Different browser_page_url for an existing canonical endpoint returns 409.
+# Successful creation does not prove that the external site grants access.

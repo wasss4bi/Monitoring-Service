@@ -1,0 +1,19 @@
+info:
+  name: List user notification contacts
+  type: http
+  seq: 6
+  tags:
+    - Contacts
+
+http:
+  method: GET
+  url: "{{baseUrl}}/me/contacts"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

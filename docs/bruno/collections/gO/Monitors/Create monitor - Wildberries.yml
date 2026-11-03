@@ -1,0 +1,52 @@
+info:
+  name: Create monitor - Wildberries
+  type: http
+  seq: 28
+
+http:
+  method: POST
+  url: "{{baseUrl}}/me/monitors"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "WB: товар 876143564, цена <= 70336 ₽ (7033600 коп.)",
+        "url": "https://www.wildberries.ru/__internal/u-card/cards/v4/detail?appType=1&curr=rub&dest=1259570991&spp=30&hide_vflags=4294967296&mtype=257&lang=ru&ab_testing=false&nm=876143564",
+        "page_url": "https://www.wildberries.ru/catalog/876143564/detail.aspx?targetUrl=MI",
+        "type": "json",
+        "path_type": "json",
+        "session_mode": "managed",
+        "rules": [
+          {
+            "path": "products[0].sizes[0].price.product",
+            "operator": "<=",
+            "value": 7033600,
+            "description": "Цена не выше 70336 ₽"
+          },
+          {
+            "path": "products[0].sizes[0].stocks[0].qty",
+            "operator": ">=",
+            "value": 1,
+            "description": "Товар в наличии"
+          }
+        ],
+        "browser_page_url": "https://www.wildberries.ru/catalog/876143564/detail.aspx?targetUrl=MI"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+docs: |-
+  Цена проверена 2026-10-29: 65336 RUB; порог 70336 RUB = цена + 5000.
+  WB передаёт цену в копейках: порог правила 7033600, не 70336.
+  Без ручного Idempotency-Key коллекция создаёт новый UUID при каждой отправке. Для повтора укажите прежний ключ из Timeline.
+  target_hostname должен существовать и быть активным; Telegram-контакт — активным и подтверждённым.
+  Используется managed: сервис автоматически создаёт анонимную сессию; переменные *Session не нужны.
+  Проверка 2026-10-30: monitor 20 success, уведомление отправлено через Browserless v1.

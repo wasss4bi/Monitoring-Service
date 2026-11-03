@@ -1,0 +1,8 @@
+meta:
+  name: List notifications
+  type: http
+  seq: 8
+get:
+  url: "{{baseUrl}}/me/notifications?limit=20"
+  body: none
+  auth: inherit

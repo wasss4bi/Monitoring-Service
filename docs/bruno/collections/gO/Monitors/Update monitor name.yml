@@ -1,0 +1,44 @@
+info:
+  name: Update monitor threshold
+  type: http
+  seq: 9
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/me/monitors/{{monitorId}}"
+  body:
+    type: json
+    data: |-
+      {
+        "url":"https://www.wildberries.ru/__internal/u-card/cards/v4/detail?appType=1&curr=rub&dest=1259570991&spp=30&hide_vflags=4294967296&mtype=257&lang=ru&ab_testing=false&nm=286601004",
+        "type": "json",
+        "path_type": "json",
+        "name": "product <= 1000 and exists",
+        "rules":[
+          {
+            "path":"products[0].sizes[0].price.product",
+            "operator":"<=",
+            "value": 1000
+          },
+          {
+            "path":"products[0].sizes[0].stocks[0].qty",
+            "operator":">=",
+            "value":1
+          }
+        ]
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  variables:
+    - name: monitorId
+      value: "22"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

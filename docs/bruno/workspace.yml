@@ -1,0 +1,15 @@
+opencollection: 1.0.0
+info:
+  name: "first_monitoring_service"
+  type: workspace
+
+collections:
+  - name: "gO"
+    path: "collections/gO"
+
+specs:
+
+docs: 'Casbin: target-hostnames and global channel mutations require
+  adminAccessToken. User profiles require owner/admin. Use Authentication/Login
+  admin; keep credentials in ignored local environments. Bootstrap policy
+  management is enabled for admins. Request body limit defaults to 1 MiB; oversized requests return HTTP 413.'

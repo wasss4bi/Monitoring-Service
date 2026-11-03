@@ -1,0 +1,46 @@
+{
+  "version": "v0.1.1",
+  "commit": "b27197c69f7fda86db303cca610c5b06e5ca218e",
+  "images": [
+    {
+      "component": "browserless",
+      "image": "ghcr.io/wasss4bi/values-from-body-fetcher-browserless",
+      "digest": "sha256:3ee14c28b62759d38a5c6097f05edb8fd62a25b320c1e66fb77c6532dbf425aa",
+      "commit": "b27197c69f7fda86db303cca610c5b06e5ca218e",
+      "version": "v0.1.1",
+      "visibility": "private"
+    },
+    {
+      "component": "fetcher",
+      "image": "ghcr.io/wasss4bi/values-from-body-fetcher",
+      "digest": "sha256:b757c4ee5af22d75430f7137a1a4e5c20c1628fca0090979e9c8a37ba33368e4",
+      "commit": "b27197c69f7fda86db303cca610c5b06e5ca218e",
+      "version": "v0.1.1",
+      "visibility": "private"
+    },
+    {
+      "component": "html",
+      "image": "ghcr.io/wasss4bi/values-from-body-fetcher-html",
+      "digest": "sha256:c867dc3072ae5ddffbadd89ae1098ce64b84dd03deca45d5bcc0e77a9c967e89",
+      "commit": "b27197c69f7fda86db303cca610c5b06e5ca218e",
+      "version": "v0.1.1",
+      "visibility": "private"
+    },
+    {
+      "component": "parser",
+      "image": "ghcr.io/wasss4bi/values-from-body-fetcher-parser",
+      "digest": "sha256:2361fc186180c6545865d501907bf8233a790ca7032a6e69016e04664537c01c",
+      "commit": "b27197c69f7fda86db303cca610c5b06e5ca218e",
+      "version": "v0.1.1",
+      "visibility": "private"
+    },
+    {
+      "component": "squid",
+      "image": "ghcr.io/wasss4bi/values-from-body-fetcher-squid",
+      "digest": "sha256:eef0bbff4322309b687cced397a48890fec7724f5d6384c89853090428e2c268",
+      "commit": "b27197c69f7fda86db303cca610c5b06e5ca218e",
+      "version": "v0.1.1",
+      "visibility": "private"
+    }
+  ]
+}

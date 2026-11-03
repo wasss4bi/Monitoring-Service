@@ -1,0 +1,26 @@
+info:
+  name: Create notification channel
+  type: http
+  seq: 2
+  tags:
+    - Contacts
+
+http:
+  method: POST
+  url: "{{baseUrl}}/contacts"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "telegram"
+      }
+  auth:
+    type: bearer
+    token: "{{adminAccessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

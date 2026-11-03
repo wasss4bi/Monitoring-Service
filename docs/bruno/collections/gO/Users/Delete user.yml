@@ -1,0 +1,103 @@
+info:
+  name: Delete user
+  type: http
+  seq: 5
+  tags:
+    - Users
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/users/:id"
+  params:
+    - name: id
+      value: "{{userId}}"
+      type: path
+  auth:
+    type: bearer
+    token: "{{adminAccessToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 204 Response
+    description: User deleted
+    request:
+      url: "{{baseUrl}}/users/:id"
+      method: DELETE
+      params:
+        - name: id
+          value: "1"
+          type: path
+    response:
+      status: 204
+      statusText: No Content
+      body:
+        type: text
+        data: ""
+  - name: 400 Response
+    description: Invalid request
+    request:
+      url: "{{baseUrl}}/users/:id"
+      method: DELETE
+      params:
+        - name: id
+          value: "1"
+          type: path
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "invalid json"
+          }
+  - name: 404 Response
+    description: Resource not found
+    request:
+      url: "{{baseUrl}}/users/:id"
+      method: DELETE
+      params:
+        - name: id
+          value: "1"
+          type: path
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "invalid json"
+          }
+  - name: 500 Response
+    description: Internal server error
+    request:
+      url: "{{baseUrl}}/users/:id"
+      method: DELETE
+      params:
+        - name: id
+          value: "1"
+          type: path
+    response:
+      status: 500
+      statusText: Internal Server Error
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "error": "invalid json"
+          }

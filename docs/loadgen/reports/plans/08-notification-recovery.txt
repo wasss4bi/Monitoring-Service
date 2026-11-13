@@ -1,0 +1,37 @@
+Timing is on.
+BEGIN
+Time: 0.380 ms
+SET
+Time: 0.154 ms
+PREPARE
+Time: 7.131 ms
+                                                                                 QUERY PLAN                                                                                  
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=42383.64..42396.14 rows=1000 width=34) (actual time=653.610..664.408 rows=1000 loops=1)
+   Buffers: shared hit=1441 read=30898 dirtied=727 written=1007, temp read=261 written=295
+   ->  LockRows  (cost=42383.64..43007.36 rows=49897 width=34) (actual time=653.609..664.275 rows=1000 loops=1)
+         Buffers: shared hit=1441 read=30898 dirtied=727 written=1007, temp read=261 written=295
+         ->  Sort  (cost=42383.64..42508.39 rows=49897 width=34) (actual time=653.459..653.696 rows=1000 loops=1)
+               Sort Key: next_attempt_at, id
+               Sort Method: external merge  Disk: 2352kB
+               Buffers: shared hit=9 read=30330 written=1007, temp read=261 written=295
+               ->  Bitmap Heap Scan on notifications  (cost=7155.65..39647.84 rows=49897 width=34) (actual time=285.043..602.795 rows=49962 loops=1)
+                     Recheck Cond: ((next_attempt_at < now()) AND ((status)::text = ANY ('{pending,sending}'::text[])))
+                     Filter: ((status)::text = 'sending'::text)
+                     Rows Removed by Filter: 149485
+                     Heap Blocks: exact=28932
+                     Buffers: shared hit=3 read=30330 written=1007
+                     ->  Bitmap Index Scan on notifications_contact_pending_idx  (cost=0.00..7143.17 rows=201954 width=0) (actual time=279.712..279.713 rows=199447 loops=1)
+                           Index Cond: (next_attempt_at < now())
+                           Buffers: shared hit=2 read=1399
+ Planning:
+   Buffers: shared hit=268
+ Planning Time: 5.486 ms
+ Execution Time: 666.469 ms
+(21 rows)
+
+Time: 672.834 ms
+DEALLOCATE
+Time: 0.059 ms
+ROLLBACK
+Time: 0.260 ms

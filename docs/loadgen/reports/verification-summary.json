@@ -1,0 +1,11 @@
+{
+  "source_head": "9dad3553b0a54a327573dc11eb4fb3905f8c1651",
+  "static_checks": "go vet ./cmd/loadgen ./tools/loadgen",
+  "small_integrity_checks": 69,
+  "verified_small_batch_sizes": [
+    137,
+    777
+  ],
+  "explain_sql_files": 17,
+  "generator_tests": "go test ./cmd/... ./internal/..."
+}

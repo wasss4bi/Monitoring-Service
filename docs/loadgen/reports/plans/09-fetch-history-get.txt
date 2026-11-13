@@ -1,0 +1,24 @@
+Timing is on.
+Time: 9.043 ms
+BEGIN
+Time: 0.107 ms
+SET
+Time: 0.500 ms
+PREPARE
+Time: 0.706 ms
+                                                                QUERY PLAN                                                                
+------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using endpoint_fetches_pkey on endpoint_fetches  (cost=0.43..8.46 rows=1 width=163) (actual time=0.666..0.668 rows=1 loops=1)
+   Index Cond: (fetch_id = 'e7dd36c3-f4c6-58f2-9e11-3299fc5f5841'::uuid)
+   Buffers: shared hit=1 read=3
+ Planning:
+   Buffers: shared hit=30 read=7
+ Planning Time: 0.656 ms
+ Execution Time: 0.710 ms
+(7 rows)
+
+Time: 2.012 ms
+DEALLOCATE
+Time: 0.275 ms
+ROLLBACK
+Time: 0.186 ms

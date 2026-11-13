@@ -1,0 +1,47 @@
+Timing is on.
+Time: 306.824 ms
+BEGIN
+Time: 0.067 ms
+SET
+Time: 0.267 ms
+PREPARE
+Time: 2.228 ms
+                                                                                 QUERY PLAN                                                                                 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ CTE Scan on claimed  (cost=17.77..17.79 rows=1 width=400) (actual time=8.246..8.255 rows=1 loops=1)
+   Buffers: shared hit=40 read=22 dirtied=8
+   CTE claimed
+     ->  Update on endpoint_fetches f  (cost=1.56..17.77 rows=1 width=450) (actual time=8.241..8.248 rows=1 loops=1)
+           Buffers: shared hit=40 read=22 dirtied=8
+           ->  Nested Loop  (cost=1.56..17.77 rows=1 width=450) (actual time=2.207..2.213 rows=1 loops=1)
+                 Buffers: shared hit=9 read=6
+                 ->  Nested Loop  (cost=1.28..17.47 rows=1 width=281) (actual time=2.173..2.178 rows=1 loops=1)
+                       Buffers: shared hit=6 read=6
+                       ->  Nested Loop  (cost=0.86..16.92 rows=1 width=165) (actual time=2.100..2.104 rows=1 loops=1)
+                             Buffers: shared hit=2 read=6
+                             ->  Index Scan using endpoint_fetches_pkey on endpoint_fetches f  (cost=0.43..8.46 rows=1 width=38) (actual time=0.762..0.764 rows=1 loops=1)
+                                   Index Cond: (fetch_id = 'a3c9dd26-672d-5d14-83cc-29f48dbcfbfb'::uuid)
+                                   Filter: (((status)::text = 'pending'::text) OR (((status)::text = 'fetching'::text) AND (lease_until < now())))
+                                   Buffers: shared hit=1 read=3
+                             ->  Index Scan using monitors_endpoint_active_idx on monitors m  (cost=0.43..8.45 rows=1 width=143) (actual time=1.334..1.334 rows=1 loops=1)
+                                   Index Cond: ((endpoint_id = f.endpoint_id) AND ((status)::text = 'monitoring'::text))
+                                   Filter: ((deleted_at IS NULL) AND (id = f.monitor_id) AND (generation = f.generation))
+                                   Buffers: shared hit=1 read=3
+                       ->  Index Scan using monitored_endpoints_pkey on monitored_endpoints e  (cost=0.42..0.55 rows=1 width=140) (actual time=0.064..0.064 rows=1 loops=1)
+                             Index Cond: (id = m.endpoint_id)
+                             Buffers: shared hit=4
+                 ->  Index Scan using target_hostnames_pkey on target_hostnames t  (cost=0.28..0.29 rows=1 width=75) (actual time=0.028..0.028 rows=1 loops=1)
+                       Index Cond: (id = e.target_hostname_id)
+                       Filter: is_active
+                       Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=118
+ Planning Time: 3.002 ms
+ Execution Time: 8.810 ms
+(30 rows)
+
+Time: 12.830 ms
+DEALLOCATE
+Time: 0.618 ms
+ROLLBACK
+Time: 0.625 ms

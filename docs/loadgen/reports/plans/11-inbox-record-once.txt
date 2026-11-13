@@ -1,0 +1,28 @@
+Timing is on.
+Time: 5.811 ms
+BEGIN
+Time: 0.357 ms
+SET
+Time: 0.430 ms
+PREPARE
+Time: 0.728 ms
+                                                QUERY PLAN                                                
+----------------------------------------------------------------------------------------------------------
+ Insert on processed_messages  (cost=0.00..0.01 rows=0 width=0) (actual time=0.282..0.283 rows=0 loops=1)
+   Conflict Resolution: NOTHING
+   Conflict Arbiter Indexes: processed_messages_pkey
+   Tuples Inserted: 0
+   Conflicting Tuples: 1
+   Buffers: shared hit=14
+   ->  Result  (cost=0.00..0.01 rows=1 width=242) (actual time=0.002..0.002 rows=1 loops=1)
+ Planning:
+   Buffers: shared hit=1 read=2
+ Planning Time: 0.211 ms
+ Execution Time: 0.299 ms
+(11 rows)
+
+Time: 0.979 ms
+DEALLOCATE
+Time: 0.399 ms
+ROLLBACK
+Time: 0.285 ms

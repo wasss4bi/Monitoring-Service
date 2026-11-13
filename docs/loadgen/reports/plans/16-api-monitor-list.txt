@@ -1,0 +1,31 @@
+Timing is on.
+Time: 10.289 ms
+BEGIN
+Time: 0.138 ms
+SET
+Time: 0.771 ms
+PREPARE
+Time: 12.204 ms
+                                                                          QUERY PLAN                                                                          
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.85..984.77 rows=79 width=360) (actual time=0.115..0.556 rows=9 loops=1)
+   Buffers: shared hit=26 read=22
+   ->  Nested Loop  (cost=0.85..984.77 rows=79 width=360) (actual time=0.114..0.553 rows=9 loops=1)
+         Buffers: shared hit=26 read=22
+         ->  Index Scan using monitors_user_created_id_idx on monitors m  (cost=0.43..321.81 rows=79 width=241) (actual time=0.076..0.193 rows=9 loops=1)
+               Index Cond: (user_id = '96472'::bigint)
+               Buffers: shared hit=2 read=10
+         ->  Index Scan using monitored_endpoints_pkey on monitored_endpoints e  (cost=0.42..8.39 rows=1 width=126) (actual time=0.038..0.038 rows=1 loops=9)
+               Index Cond: (id = m.endpoint_id)
+               Buffers: shared hit=24 read=12
+ Planning:
+   Buffers: shared hit=199 read=5
+ Planning Time: 7.981 ms
+ Execution Time: 0.720 ms
+(14 rows)
+
+Time: 18.275 ms
+DEALLOCATE
+Time: 0.372 ms
+ROLLBACK
+Time: 1.351 ms

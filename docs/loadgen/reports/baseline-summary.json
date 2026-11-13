@@ -1,0 +1,121 @@
+[
+  {
+    "execution_ms": 5536.01,
+    "query": "01-scheduler",
+    "origin": "current runtime query",
+    "planning_ms": 36.358,
+    "buffers": "shared hit=9840 read=122338 dirtied=985, temp read=8740 written=10863"
+  },
+  {
+    "execution_ms": 0.88,
+    "query": "02-fetch-owner-lock",
+    "origin": "current runtime query",
+    "planning_ms": 1.075,
+    "buffers": "shared hit=7 read=3 dirtied=1"
+  },
+  {
+    "execution_ms": 8.81,
+    "query": "03-fetch-claim",
+    "origin": "current runtime query",
+    "planning_ms": 3.002,
+    "buffers": "shared hit=40 read=22 dirtied=8"
+  },
+  {
+    "execution_ms": 0.26,
+    "query": "04-evaluation-monitor-rules",
+    "origin": "current runtime query",
+    "planning_ms": 1.196,
+    "buffers": "shared hit=8 read=4"
+  },
+  {
+    "execution_ms": 0.696,
+    "query": "05-rules-batch",
+    "origin": "current runtime query",
+    "planning_ms": 0.869,
+    "buffers": "shared hit=503 read=3"
+  },
+  {
+    "execution_ms": 1.047,
+    "query": "06-outbox-claim",
+    "origin": "current runtime query",
+    "planning_ms": 2.22,
+    "buffers": "shared hit=15 read=14 dirtied=7"
+  },
+  {
+    "execution_ms": 5.472,
+    "query": "07-notification-claim",
+    "origin": "current runtime query",
+    "planning_ms": 3.098,
+    "buffers": "shared hit=31 read=18 dirtied=8"
+  },
+  {
+    "execution_ms": 666.469,
+    "query": "08-notification-recovery",
+    "origin": "current runtime query",
+    "planning_ms": 5.486,
+    "buffers": "shared hit=1441 read=30898 dirtied=727 written=1007, temp read=261 written=295"
+  },
+  {
+    "execution_ms": 0.71,
+    "query": "09-fetch-history-get",
+    "origin": "repository-only; no runtime callers found",
+    "planning_ms": 0.656,
+    "buffers": "shared hit=1 read=3"
+  },
+  {
+    "execution_ms": 0.207,
+    "query": "10-inbox-exists",
+    "origin": "current runtime query",
+    "planning_ms": 0.315,
+    "buffers": "shared read=4"
+  },
+  {
+    "execution_ms": 0.299,
+    "query": "11-inbox-record-once",
+    "origin": "current runtime query",
+    "planning_ms": 0.211,
+    "buffers": "shared hit=14"
+  },
+  {
+    "execution_ms": 41.559,
+    "query": "12-api-idempotency",
+    "origin": "current runtime query",
+    "planning_ms": 2.444,
+    "buffers": "shared read=4"
+  },
+  {
+    "execution_ms": 76.628,
+    "query": "13-fetch-recovery",
+    "origin": "current runtime query",
+    "planning_ms": 10.36,
+    "buffers": "shared hit=6604 read=4404 dirtied=869"
+  },
+  {
+    "execution_ms": 0.576,
+    "query": "14-endpoint-active-monitors",
+    "origin": "repository-only; no runtime callers found",
+    "planning_ms": 0.369,
+    "buffers": "shared hit=6 read=3 dirtied=1"
+  },
+  {
+    "execution_ms": 839.286,
+    "query": "15-fetch-retention",
+    "origin": "current runtime query",
+    "planning_ms": 9.309,
+    "buffers": "shared hit=5041 read=1967 dirtied=959"
+  },
+  {
+    "execution_ms": 0.72,
+    "query": "16-api-monitor-list",
+    "origin": "current runtime query",
+    "planning_ms": 7.981,
+    "buffers": "shared hit=26 read=22"
+  },
+  {
+    "execution_ms": 53.715,
+    "query": "17-api-notification-list",
+    "origin": "current runtime query",
+    "planning_ms": 2.318,
+    "buffers": "shared hit=379 read=213 dirtied=2"
+  }
+]

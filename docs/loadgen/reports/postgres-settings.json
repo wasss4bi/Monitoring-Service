@@ -1,0 +1,1 @@
+{"jit": "on", "timezone": "UTC", "work_mem": "4MB", "seq_page_cost": "1", "schema_version": 21, "server_version": "16.12", "shared_buffers": "128MB", "random_page_cost": "4", "shm_capacity_bytes": 1073741824, "effective_cache_size": "4GB", "default_statistics_target": "100", "max_parallel_workers_per_gather": "2"}

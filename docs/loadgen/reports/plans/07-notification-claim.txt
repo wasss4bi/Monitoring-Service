@@ -1,0 +1,38 @@
+Timing is on.
+Time: 12.549 ms
+BEGIN
+Time: 0.306 ms
+SET
+Time: 0.315 ms
+PREPARE
+Time: 2.734 ms
+                                                                       QUERY PLAN                                                                       
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ Update on notifications n  (cost=0.97..17.05 rows=1 width=137) (actual time=5.225..5.231 rows=1 loops=1)
+   Buffers: shared hit=31 read=18 dirtied=8
+   ->  Nested Loop  (cost=0.97..17.05 rows=1 width=137) (actual time=0.083..0.088 rows=1 loops=1)
+         Buffers: shared hit=8 read=2
+         ->  Nested Loop  (cost=0.84..16.89 rows=1 width=46) (actual time=0.065..0.069 rows=1 loops=1)
+               Buffers: shared hit=6 read=2
+               ->  Index Scan using notifications_pkey on notifications n  (cost=0.42..8.45 rows=1 width=18) (actual time=0.027..0.029 rows=1 loops=1)
+                     Index Cond: (id = '9'::bigint)
+                     Filter: (((status)::text = 'pending'::text) OR (((status)::text = 'sending'::text) AND (next_attempt_at < now())))
+                     Buffers: shared hit=4
+               ->  Index Scan using user_contacts_pkey on user_contacts uc  (cost=0.42..8.44 rows=1 width=44) (actual time=0.036..0.036 rows=1 loops=1)
+                     Index Cond: (id = n.user_contact_id)
+                     Filter: (is_active AND is_verified)
+                     Buffers: shared hit=2 read=2
+         ->  Index Scan using contacts_pkey on contacts c  (cost=0.13..0.15 rows=1 width=21) (actual time=0.016..0.017 rows=1 loops=1)
+               Index Cond: (id = uc.contact_id)
+               Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=173 read=1
+ Planning Time: 3.098 ms
+ Execution Time: 5.472 ms
+(21 rows)
+
+Time: 9.666 ms
+DEALLOCATE
+Time: 0.259 ms
+ROLLBACK
+Time: 0.340 ms

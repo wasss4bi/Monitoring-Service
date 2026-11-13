@@ -1,0 +1,38 @@
+Timing is on.
+BEGIN
+Time: 4.564 ms
+SET
+Time: 0.549 ms
+PREPARE
+Time: 10.242 ms
+                                                                                    QUERY PLAN                                                                                     
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=1.27..17409.16 rows=1000 width=104) (actual time=1.192..76.253 rows=1000 loops=1)
+   Buffers: shared hit=6604 read=4404 dirtied=869
+   ->  LockRows  (cost=1.27..65855.33 rows=3783 width=104) (actual time=1.191..76.104 rows=1000 loops=1)
+         Buffers: shared hit=6604 read=4404 dirtied=869
+         ->  Nested Loop  (cost=1.27..65817.50 rows=3783 width=104) (actual time=1.165..65.831 rows=1000 loops=1)
+               Buffers: shared hit=4604 read=4404
+               ->  Nested Loop  (cost=0.85..41059.15 rows=3783 width=85) (actual time=1.109..41.626 rows=1000 loops=1)
+                     Buffers: shared hit=2385 read=2623
+                     ->  Index Scan using endpoint_fetches_lease_idx on endpoint_fetches f  (cost=0.42..11963.71 rows=3783 width=54) (actual time=1.017..17.208 rows=1000 loops=1)
+                           Index Cond: (lease_until < now())
+                           Filter: ((status)::text = 'fetching'::text)
+                           Buffers: shared hit=244 read=764
+                     ->  Index Scan using monitors_pkey on monitors m  (cost=0.43..7.69 rows=1 width=39) (actual time=0.024..0.024 rows=1 loops=1000)
+                           Index Cond: (id = f.monitor_id)
+                           Buffers: shared hit=2141 read=1859
+               ->  Index Scan using monitored_endpoints_pkey on monitored_endpoints e  (cost=0.42..6.54 rows=1 width=19) (actual time=0.023..0.023 rows=1 loops=1000)
+                     Index Cond: (id = f.endpoint_id)
+                     Buffers: shared hit=2219 read=1781
+ Planning:
+   Buffers: shared hit=486 read=44
+ Planning Time: 10.360 ms
+ Execution Time: 76.628 ms
+(22 rows)
+
+Time: 88.109 ms
+DEALLOCATE
+Time: 0.914 ms
+ROLLBACK
+Time: 1.528 ms

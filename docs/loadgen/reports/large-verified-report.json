@@ -1,0 +1,283 @@
+{
+  "config": {
+    "mode": "large",
+    "counts": {
+      "users": 100000,
+      "target_hostnames": 1000,
+      "monitored_endpoints": 1000000,
+      "monitors": 2000000,
+      "monitor_rules": 3000000,
+      "endpoint_fetches": 2500000,
+      "monitor_fetch_evaluations": 2000000,
+      "notifications": 1000000,
+      "outbox_events": 3500000,
+      "processed_messages": 1000000,
+      "idempotency_keys": 1000000
+    },
+    "batch_size": 10000,
+    "seed": 42,
+    "as_of": "2026-11-04T02:42:51Z",
+    "date_from": "2026-08-06T02:42:51Z",
+    "monitor_statuses": {
+      "error": 0.1,
+      "monitoring": 0.55,
+      "stopped": 0.05,
+      "success": 0.3
+    },
+    "endpoint_statuses": {
+      "access_denied": 0.01,
+      "error": 0.04,
+      "fetching": 0.05,
+      "idle": 0.6,
+      "retry_wait": 0.15,
+      "scheduled": 0.15
+    },
+    "fetch_statuses": {
+      "failed": 0.1,
+      "fetching": 0.04,
+      "pending": 0.06,
+      "succeeded": 0.8
+    },
+    "notification_statuses": {
+      "failed": 0.07,
+      "pending": 0.15,
+      "sending": 0.05,
+      "sent": 0.7,
+      "skipped": 0.03
+    },
+    "overdue_fraction": 0.4,
+    "error_fraction": 0.15,
+    "unpublished_pending_fraction": 0.6,
+    "html_fraction": 0.3,
+    "soft_deleted_fraction": 0.03
+  },
+  "started_at": "2026-11-04T03:33:05.597895238Z",
+  "generation_seconds": 2308.05,
+  "total_seconds": 2587.00308868,
+  "database_bytes": 5147327511,
+  "tables": {
+    "contacts": {
+      "count": 2,
+      "xor": "-4372561817176074658",
+      "sum": "1965562956264131175"
+    },
+    "endpoint_fetches": {
+      "count": 2500000,
+      "xor": "8862895449774364195",
+      "sum": "8662768705057665943435"
+    },
+    "idempotency_keys": {
+      "count": 1000000,
+      "xor": "2730618058793292916",
+      "sum": "-599782345298852558372"
+    },
+    "monitor_fetch_evaluations": {
+      "count": 2000000,
+      "xor": "8274647676562231286",
+      "sum": "-665342072635426979446"
+    },
+    "monitor_rules": {
+      "count": 3000000,
+      "xor": "2721697549493282227",
+      "sum": "2152973062312341224599"
+    },
+    "monitored_endpoints": {
+      "count": 1000000,
+      "xor": "5317021255985455672",
+      "sum": "745898794207484443087"
+    },
+    "monitors": {
+      "count": 2000000,
+      "xor": "-3526576714548233370",
+      "sum": "-6240404161152554513393"
+    },
+    "notifications": {
+      "count": 1000000,
+      "xor": "4163552005387603703",
+      "sum": "12627942765266282983999"
+    },
+    "outbox_events": {
+      "count": 3500000,
+      "xor": "8928314945174460131",
+      "sum": "564762890656111340676"
+    },
+    "processed_messages": {
+      "count": 1000000,
+      "xor": "-6525433377712122347",
+      "sum": "8301360852410325033789"
+    },
+    "target_hostnames": {
+      "count": 1000,
+      "xor": "-2120263401175255119",
+      "sum": "-65968863340699955739"
+    },
+    "user_contacts": {
+      "count": 219958,
+      "xor": "4929800691300813354",
+      "sum": "-533513904153444012031"
+    },
+    "users": {
+      "count": 100001,
+      "xor": "-1953712020848741151",
+      "sum": "1008309798734677758445"
+    }
+  },
+  "checks": {
+    "disabled_integrity_triggers": 0,
+    "endpoint_identity": 0,
+    "endpoint_state": 0,
+    "evaluation_owner": 0,
+    "fetch_owner": 0,
+    "fetch_state": 0,
+    "fetch_time": 0,
+    "fk:endpoint_fetches_endpoint_id_fkey": 0,
+    "fk:endpoint_fetches_monitor_id_fkey": 0,
+    "fk:idempotency_keys_user_id_fkey": 0,
+    "fk:monitor_fetch_evaluations_fetch_id_fkey": 0,
+    "fk:monitor_fetch_evaluations_monitor_id_fkey": 0,
+    "fk:monitor_rules_monitor_id_fkey": 0,
+    "fk:monitored_endpoints_target_hostname_id_fkey": 0,
+    "fk:monitors_endpoint_id_fkey": 0,
+    "fk:monitors_user_id_fkey": 0,
+    "fk:notifications_monitor_id_fkey": 0,
+    "fk:notifications_user_contact_id_fkey": 0,
+    "fk:user_contacts_contact_id_fkey": 0,
+    "fk:user_contacts_user_id_fkey": 0,
+    "idempotency_state": 0,
+    "inbox_event": 0,
+    "live_owner": 0,
+    "monitor_terminal": 0,
+    "monitor_time": 0,
+    "not-null:contacts": 0,
+    "not-null:endpoint_fetches": 0,
+    "not-null:idempotency_keys": 0,
+    "not-null:monitor_fetch_evaluations": 0,
+    "not-null:monitor_rules": 0,
+    "not-null:monitored_endpoints": 0,
+    "not-null:monitors": 0,
+    "not-null:notifications": 0,
+    "not-null:outbox_events": 0,
+    "not-null:processed_messages": 0,
+    "not-null:target_hostnames": 0,
+    "not-null:user_contacts": 0,
+    "not-null:users": 0,
+    "notification_owner": 0,
+    "notification_time": 0,
+    "outbox_payload": 0,
+    "path_type": 0,
+    "rule_count": 0,
+    "stopped_generation": 0,
+    "terminal_transport_state": 0,
+    "unique:contacts_name_key": 0,
+    "unique:contacts_pkey": 0,
+    "unique:endpoint_fetches_legacy_generation_idx": 0,
+    "unique:endpoint_fetches_monitor_generation_key": 0,
+    "unique:endpoint_fetches_pkey": 0,
+    "unique:idempotency_keys_pkey": 0,
+    "unique:monitor_fetch_evaluations_pkey": 0,
+    "unique:monitor_rules_pkey": 0,
+    "unique:monitored_endpoints_canonical_url_key": 0,
+    "unique:monitored_endpoints_pkey": 0,
+    "unique:monitors_pkey": 0,
+    "unique:notifications_idempotency_key_key": 0,
+    "unique:notifications_monitor_event_contact_key": 0,
+    "unique:notifications_pkey": 0,
+    "unique:outbox_events_event_id_key": 0,
+    "unique:outbox_events_pkey": 0,
+    "unique:processed_messages_pkey": 0,
+    "unique:target_hostnames_hostname_unique": 0,
+    "unique:target_hostnames_pkey": 0,
+    "unique:user_contacts_pkey": 0,
+    "unique:user_contacts_user_id_contact_id_contact_key": 0,
+    "unique:users_email_key": 0,
+    "unique:users_pkey": 0,
+    "unvalidated_constraints": 0
+  },
+  "distributions": {
+    "consumers": {
+      "endpoint-fetch-worker": 800000,
+      "notification-worker": 200000
+    },
+    "endpoint_due": {
+      "due": 360492,
+      "future": 539361,
+      "null": 100147
+    },
+    "endpoint_status": {
+      "access_denied": 9992,
+      "error": 40070,
+      "fetching": 50085,
+      "idle": 600183,
+      "retry_wait": 150336,
+      "scheduled": 149334
+    },
+    "fetch_status": {
+      "failed": 250000,
+      "fetching": 100000,
+      "pending": 150000,
+      "succeeded": 2000000
+    },
+    "monitor_check_status": {
+      "fetching": 100000,
+      "idle": 1500000,
+      "retry_wait": 250000,
+      "scheduled": 150000
+    },
+    "monitor_due": {
+      "due": 339619,
+      "future": 660381,
+      "null": 1000000
+    },
+    "monitor_status": {
+      "error": 200000,
+      "monitoring": 1100000,
+      "stopped": 100000,
+      "success": 600000
+    },
+    "notification_candidates": {
+      "claimable_notifications": 169473
+    },
+    "notification_status": {
+      "failed": 70169,
+      "pending": 149485,
+      "sending": 49962,
+      "sent": 700241,
+      "skipped": 30143
+    },
+    "outbox_candidates": {
+      "claimable_events": 60587
+    },
+    "outbox_publication": {
+      "published": 3320493,
+      "unpublished": 179507
+    },
+    "outbox_type": {
+      "endpoint.fetch.html": 749633,
+      "endpoint.fetch.json": 1750367,
+      "notification.deliver": 1000000
+    },
+    "scheduler_candidates": {
+      "eligible": 312849
+    },
+    "worker_candidates": {
+      "claimable_fetches": 141150
+    }
+  },
+  "table_seconds": {
+    "contacts": 0,
+    "endpoint_fetches": 624.91,
+    "idempotency_keys": 97.66,
+    "monitor_fetch_evaluations": 348.38,
+    "monitor_rules": 364.58,
+    "monitored_endpoints": 99.04,
+    "monitors": 356.65,
+    "notifications": 205.8,
+    "outbox_events": 157.02,
+    "processed_messages": 27.2,
+    "target_hostnames": 0.03,
+    "user_contacts": 25.36,
+    "users": 1.42
+  },
+  "timing_source": "COPY durations recovered from original CLI logs; started_at is validation-resume time; total_seconds is COPY plus finalization, not one continuous CLI run",
+  "validation_seconds": 278.95308868
+}

@@ -1,0 +1,38 @@
+Timing is on.
+BEGIN
+Time: 0.290 ms
+SET
+Time: 0.352 ms
+PREPARE
+Time: 5.672 ms
+                                                                               QUERY PLAN                                                                               
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Update on outbox_events event  (cost=2.65..10.69 rows=1 width=66) (actual time=0.741..0.743 rows=1 loops=1)
+   Buffers: shared hit=15 read=14 dirtied=7
+   CTE candidate
+     ->  Limit  (cost=0.42..2.22 rows=1 width=22) (actual time=0.118..0.119 rows=1 loops=1)
+           Buffers: shared hit=1 read=5 dirtied=1
+           ->  LockRows  (cost=0.42..315787.29 rows=175758 width=22) (actual time=0.117..0.118 rows=1 loops=1)
+                 Buffers: shared hit=1 read=5 dirtied=1
+                 ->  Index Scan using outbox_events_pending_idx on outbox_events  (cost=0.42..314029.71 rows=175758 width=22) (actual time=0.066..0.066 rows=1 loops=1)
+                       Index Cond: (next_attempt_at <= now())
+                       Filter: ((published_at IS NULL) AND ((lease_until IS NULL) OR (lease_until < now())))
+                       Buffers: shared read=4
+   ->  Nested Loop  (cost=0.43..8.48 rows=1 width=66) (actual time=0.179..0.180 rows=1 loops=1)
+         Buffers: shared hit=3 read=7 dirtied=1
+         ->  CTE Scan on candidate  (cost=0.00..0.02 rows=1 width=40) (actual time=0.138..0.139 rows=1 loops=1)
+               Buffers: shared hit=1 read=5 dirtied=1
+         ->  Index Scan using outbox_events_pkey on outbox_events event  (cost=0.43..8.45 rows=1 width=18) (actual time=0.039..0.039 rows=1 loops=1)
+               Index Cond: (id = candidate.id)
+               Buffers: shared hit=2 read=2
+ Planning:
+   Buffers: shared hit=143
+ Planning Time: 2.220 ms
+ Execution Time: 1.047 ms
+(22 rows)
+
+Time: 3.732 ms
+DEALLOCATE
+Time: 0.362 ms
+ROLLBACK
+Time: 0.139 ms

@@ -1,0 +1,31 @@
+Timing is on.
+Time: 15.942 ms
+BEGIN
+Time: 1.684 ms
+SET
+Time: 0.277 ms
+PREPARE
+Time: 0.689 ms
+                                                                     QUERY PLAN                                                                     
+----------------------------------------------------------------------------------------------------------------------------------------------------
+ LockRows  (cost=8.46..8.47 rows=1 width=47) (actual time=0.529..0.530 rows=1 loops=1)
+   Buffers: shared hit=6 read=3 dirtied=1
+   ->  Sort  (cost=8.46..8.46 rows=1 width=47) (actual time=0.480..0.480 rows=1 loops=1)
+         Sort Key: id
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=4 read=3
+         ->  Index Scan using monitors_endpoint_active_idx on monitors  (cost=0.43..8.45 rows=1 width=47) (actual time=0.413..0.415 rows=1 loops=1)
+               Index Cond: ((endpoint_id = '2'::bigint) AND ((status)::text = 'monitoring'::text))
+               Filter: (deleted_at IS NULL)
+               Buffers: shared hit=1 read=3
+ Planning:
+   Buffers: shared hit=6
+ Planning Time: 0.369 ms
+ Execution Time: 0.576 ms
+(14 rows)
+
+Time: 3.271 ms
+DEALLOCATE
+Time: 0.719 ms
+ROLLBACK
+Time: 1.147 ms

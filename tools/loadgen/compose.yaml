@@ -1,0 +1,52 @@
+name: monitoring_service-loadgen
+services:
+  postgres:
+    image: postgres:16-alpine
+    shm_size: 1gb
+    environment:
+      POSTGRES_DB: monitoring_service_loadtest
+      POSTGRES_USER: loadgen
+      POSTGRES_PASSWORD: ${LOADGEN_PASSWORD:?Set a dedicated LOADGEN_PASSWORD}
+    volumes:
+      - data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/10-loadgen.sql:ro
+    networks:
+      isolated: {}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loadgen -d monitoring_service_loadtest"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  migrate:
+    build:
+      context: ../..
+      dockerfile: tools/loadgen/Dockerfile
+    entrypoint: ["/migrate"]
+    environment:
+      DATABASE_URL: postgres://loadgen:${LOADGEN_PASSWORD}@postgres:5432/monitoring_service_loadtest?sslmode=disable
+      MIGRATIONS_PATH: /migrations
+      ADMIN_EMAIL: loadgen-admin@example.invalid
+      ADMIN_PASSWORD: ${LOADGEN_PASSWORD:?Set a dedicated LOADGEN_PASSWORD}
+    networks: [isolated]
+    profiles: [tools]
+    depends_on:
+      postgres: {condition: service_healthy}
+  generate:
+    build:
+      context: ../..
+      dockerfile: tools/loadgen/Dockerfile
+    environment:
+      LOADGEN_ENV: test
+      LOADGEN_DATABASE_URL: postgres://loadgen:${LOADGEN_PASSWORD}@postgres:5432/monitoring_service_loadtest?sslmode=disable
+    volumes:
+      - ../../docs/loadgen:/results
+    command: ["--config=/results/large.json", "--report=/results/large-report.json"]
+    networks: [isolated]
+    profiles: [tools]
+    depends_on:
+      postgres: {condition: service_healthy}
+networks:
+  isolated:
+    internal: true
+volumes:
+  data:

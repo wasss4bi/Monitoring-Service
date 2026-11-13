@@ -1,0 +1,25 @@
+Timing is on.
+Time: 438.836 ms
+BEGIN
+Time: 0.081 ms
+SET
+Time: 0.140 ms
+PREPARE
+Time: 8.514 ms
+                                                                 QUERY PLAN                                                                 
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idempotency_keys_pkey on idempotency_keys  (cost=0.42..8.45 rows=1 width=198) (actual time=41.372..41.375 rows=1 loops=1)
+   Index Cond: ((key)::text = '59c8a266-ecee-50b7-9476-1d6567606550'::text)
+   Filter: (expires_at > now())
+   Buffers: shared read=4
+ Planning:
+   Buffers: shared hit=33 read=1
+ Planning Time: 2.444 ms
+ Execution Time: 41.559 ms
+(8 rows)
+
+Time: 46.182 ms
+DEALLOCATE
+Time: 0.369 ms
+ROLLBACK
+Time: 0.322 ms

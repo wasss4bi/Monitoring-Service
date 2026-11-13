@@ -1,0 +1,68 @@
+Timing is on.
+BEGIN
+Time: 0.166 ms
+SET
+Time: 0.097 ms
+PREPARE
+Time: 32.314 ms
+                                                                                                           QUERY PLAN                                                                                                            
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=262203.67..262216.17 rows=1000 width=53) (actual time=5327.237..5356.292 rows=1000 loops=1)
+   Buffers: shared hit=9840 read=122338 dirtied=985, temp read=8740 written=10863
+   ->  LockRows  (cost=262203.67..269187.64 rows=558717 width=53) (actual time=5244.917..5273.824 rows=1000 loops=1)
+         Buffers: shared hit=9840 read=122338 dirtied=985, temp read=8740 written=10863
+         ->  Sort  (cost=262203.67..263600.47 rows=558717 width=53) (actual time=5244.720..5245.249 rows=1000 loops=1)
+               Sort Key: m.next_check_at NULLS FIRST, m.id
+               Sort Method: external merge  Disk: 20424kB
+               Buffers: shared hit=9128 read=121352, temp read=8740 written=10863
+               ->  Hash Join  (cost=64888.59..231569.82 rows=558717 width=53) (actual time=2813.424..4935.083 rows=315479 loops=1)
+                     Hash Cond: (m.user_id = uc.user_id)
+                     Buffers: shared hit=9122 read=121352, temp read=8279 written=8302
+                     ->  Hash Join  (cost=55059.76..214058.64 rows=558717 width=55) (actual time=2043.142..3980.657 rows=315479 loops=1)
+                           Hash Cond: (e.target_hostname_id = t.id)
+                           Buffers: shared hit=9021 read=116438, temp read=8267 written=8267
+                           ->  Hash Join  (cost=55016.00..212449.68 rows=593748 width=57) (actual time=2041.832..3892.266 rows=335332 loops=1)
+                                 Hash Cond: (m.endpoint_id = e.id)
+                                 Buffers: shared hit=8999 read=116438, temp read=8267 written=8267
+                                 ->  Seq Scan on monitors m  (cost=0.00..139761.08 rows=593748 width=38) (actual time=0.061..1262.935 rows=335332 loops=1)
+                                       Filter: ((deleted_at IS NULL) AND (check_status = ANY ('{idle,retry_wait}'::text[])) AND ((status)::text = 'monitoring'::text) AND ((next_check_at IS NULL) OR (next_check_at <= now())))
+                                       Rows Removed by Filter: 1664668
+                                       Buffers: shared hit=401 read=99356
+                                 ->  Hash  (cost=35680.00..35680.00 rows=1000000 width=27) (actual time=2032.050..2032.051 rows=1000000 loops=1)
+                                       Buckets: 131072  Batches: 16  Memory Usage: 4940kB
+                                       Buffers: shared hit=8598 read=17082, temp written=5943
+                                       ->  Seq Scan on monitored_endpoints e  (cost=0.00..35680.00 rows=1000000 width=27) (actual time=0.103..1119.632 rows=1000000 loops=1)
+                                             Buffers: shared hit=8598 read=17082
+                           ->  Hash  (cost=32.00..32.00 rows=941 width=14) (actual time=0.707..0.708 rows=941 loops=1)
+                                 Buckets: 1024  Batches: 1  Memory Usage: 53kB
+                                 Buffers: shared hit=22
+                                 ->  Seq Scan on target_hostnames t  (cost=0.00..32.00 rows=941 width=14) (actual time=0.179..0.404 rows=941 loops=1)
+                                       Filter: is_active
+                                       Rows Removed by Filter: 59
+                                       Buffers: shared hit=22
+                     ->  Hash  (cost=8629.38..8629.38 rows=95956 width=14) (actual time=766.519..766.520 rows=100000 loops=1)
+                           Buckets: 131072  Batches: 1  Memory Usage: 5712kB
+                           Buffers: shared hit=101 read=4914, temp read=12 written=35
+                           ->  HashAggregate  (cost=7669.81..8629.38 rows=95956 width=14) (actual time=499.614..653.299 rows=100000 loops=1)
+                                 Group Key: uc.user_id
+                                 Batches: 5  Memory Usage: 10289kB  Disk Usage: 216kB
+                                 Buffers: shared hit=101 read=4914, temp read=12 written=35
+                                 ->  Seq Scan on user_contacts uc  (cost=0.00..7214.58 rows=182094 width=14) (actual time=0.156..208.357 rows=200000 loops=1)
+                                       Filter: (is_active AND is_verified)
+                                       Rows Removed by Filter: 19958
+                                       Buffers: shared hit=101 read=4914
+ Planning:
+   Buffers: shared hit=501 read=5
+ Planning Time: 36.358 ms
+ JIT:
+   Functions: 39
+   Options: Inlining false, Optimization false, Expressions true, Deforming true
+   Timing: Generation 7.198 ms, Inlining 0.000 ms, Optimization 4.088 ms, Emission 94.981 ms, Total 106.267 ms
+ Execution Time: 5536.010 ms
+(52 rows)
+
+Time: 5573.562 ms (00:05.574)
+DEALLOCATE
+Time: 0.139 ms
+ROLLBACK
+Time: 1.018 ms

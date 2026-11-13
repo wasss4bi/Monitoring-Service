@@ -1,0 +1,28 @@
+Timing is on.
+Time: 9.690 ms
+BEGIN
+Time: 0.439 ms
+SET
+Time: 0.279 ms
+PREPARE
+Time: 5.949 ms
+                                                                       QUERY PLAN                                                                        
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+ Result  (cost=8.45..8.46 rows=1 width=1) (actual time=0.097..0.098 rows=1 loops=1)
+   Buffers: shared read=4
+   InitPlan 1 (returns $0)
+     ->  Index Only Scan using processed_messages_pkey on processed_messages  (cost=0.42..8.45 rows=1 width=0) (actual time=0.095..0.096 rows=1 loops=1)
+           Index Cond: ((consumer_name = 'notification-worker'::text) AND (message_id = 'b3e19c16-378d-5180-8ce9-3eaf26fcd107'::uuid))
+           Heap Fetches: 0
+           Buffers: shared read=4
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.315 ms
+ Execution Time: 0.207 ms
+(11 rows)
+
+Time: 1.386 ms
+DEALLOCATE
+Time: 0.783 ms
+ROLLBACK
+Time: 0.178 ms

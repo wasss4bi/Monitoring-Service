@@ -1,0 +1,36 @@
+Timing is on.
+Time: 15.613 ms
+BEGIN
+Time: 0.194 ms
+SET
+Time: 0.278 ms
+PREPARE
+Time: 3.075 ms
+                                                                                QUERY PLAN                                                                                
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=1039.55..1039.65 rows=39 width=198) (actual time=53.503..53.571 rows=70 loops=1)
+   Buffers: shared hit=379 read=213 dirtied=2
+   ->  Sort  (cost=1039.55..1039.65 rows=39 width=198) (actual time=53.501..53.535 rows=70 loops=1)
+         Sort Key: n.created_at DESC, n.id DESC
+         Sort Method: quicksort  Memory: 43kB
+         Buffers: shared hit=379 read=213 dirtied=2
+         ->  Nested Loop  (cost=0.85..1038.52 rows=39 width=198) (actual time=3.850..53.160 rows=70 loops=1)
+               Buffers: shared hit=373 read=213 dirtied=2
+               ->  Index Only Scan using monitors_user_created_id_idx on monitors m  (cost=0.43..53.81 rows=79 width=8) (actual time=0.084..0.803 rows=140 loops=1)
+                     Index Cond: (user_id = '7140'::bigint)
+                     Heap Fetches: 29
+                     Buffers: shared hit=101 read=29 dirtied=2
+               ->  Index Scan using notifications_monitor_created_idx on notifications n  (cost=0.42..12.44 rows=2 width=182) (actual time=0.370..0.371 rows=0 loops=140)
+                     Index Cond: (monitor_id = m.id)
+                     Buffers: shared hit=272 read=184
+ Planning:
+   Buffers: shared hit=63 read=1
+ Planning Time: 2.318 ms
+ Execution Time: 53.715 ms
+(19 rows)
+
+Time: 56.753 ms
+DEALLOCATE
+Time: 0.547 ms
+ROLLBACK
+Time: 0.545 ms

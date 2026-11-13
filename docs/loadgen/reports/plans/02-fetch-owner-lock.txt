@@ -1,0 +1,32 @@
+Timing is on.
+Time: 627.780 ms
+BEGIN
+Time: 0.266 ms
+SET
+Time: 0.075 ms
+PREPARE
+Time: 0.462 ms
+                                                                          QUERY PLAN                                                                           
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+ LockRows  (cost=0.86..16.92 rows=1 width=20) (actual time=0.804..0.806 rows=1 loops=1)
+   Buffers: shared hit=7 read=3 dirtied=1
+   ->  Nested Loop  (cost=0.86..16.91 rows=1 width=20) (actual time=0.771..0.773 rows=1 loops=1)
+         Buffers: shared hit=5 read=3
+         ->  Index Scan using endpoint_fetches_pkey on endpoint_fetches f  (cost=0.43..8.45 rows=1 width=22) (actual time=0.719..0.720 rows=1 loops=1)
+               Index Cond: (fetch_id = 'af842594-a11c-53f4-8823-33ed73a76a92'::uuid)
+               Buffers: shared hit=1 read=3
+         ->  Index Scan using monitors_pkey on monitors m  (cost=0.43..8.45 rows=1 width=22) (actual time=0.046..0.046 rows=1 loops=1)
+               Index Cond: (id = f.monitor_id)
+               Filter: ((deleted_at IS NULL) AND ((status)::text = 'monitoring'::text) AND (check_status = 'scheduled'::text) AND (f.generation = generation))
+               Buffers: shared hit=4
+ Planning:
+   Buffers: shared hit=22
+ Planning Time: 1.075 ms
+ Execution Time: 0.880 ms
+(15 rows)
+
+Time: 2.462 ms
+DEALLOCATE
+Time: 0.315 ms
+ROLLBACK
+Time: 0.332 ms

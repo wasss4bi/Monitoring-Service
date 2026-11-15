@@ -112,6 +112,7 @@ func withBodyLimits(mux *http.ServeMux, limits map[string]int64) http.Handler {
 				_, _ = w.Write([]byte(`{"error":{"code":"Request Entity Too Large","message":"request body is too large"}}`))
 				return
 			}
+			setRequestError(w, err)
 			w.WriteHeader(http.StatusBadRequest)
 			_, _ = w.Write([]byte(`{"error":{"code":"Bad Request","message":"failed to read request body"}}`))
 			return
@@ -149,6 +150,9 @@ func logRequest(next http.Handler, logger *slog.Logger) http.Handler {
 			route = r.URL.Path
 		}
 		observeHTTPRequest(r.Method, route, strconv.Itoa(recorder.Status()), time.Since(start))
+		if recorder.Status() == http.StatusBadRequest && (recorder.RequestError() == nil || errors.Is(recorder.RequestError(), service.ErrValidation)) {
+			return
+		}
 
 		payload := map[string]any{
 			"method":   r.Method,

@@ -5,12 +5,14 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"strings"
 	"time"
 
 	"monitoring_service/internal/domain"
+	"monitoring_service/internal/logging"
 	"monitoring_service/internal/service"
 )
 
@@ -51,6 +53,7 @@ func (e *idempotencyExecutor) runWithRecovery(w http.ResponseWriter, r *http.Req
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		setRequestError(w, err)
 		writeError(w, http.StatusBadRequest, "failed to read request body")
 		return
 	}
@@ -163,10 +166,14 @@ func writeStoredResponse(w http.ResponseWriter, status int, body []byte) {
 	}
 	w.WriteHeader(status)
 	if len(body) == 0 {
-		_, _ = w.Write([]byte("null"))
+		if _, err := w.Write([]byte("null")); err != nil {
+			logging.Error(context.Background(), slog.Default(), "failed to write stored response", nil, err)
+		}
 		return
 	}
-	_, _ = w.Write(body)
+	if _, err := w.Write(body); err != nil {
+		logging.Error(context.Background(), slog.Default(), "failed to write stored response", nil, err)
+	}
 }
 
 func requestIP(r *http.Request) string {
@@ -238,7 +245,9 @@ func (w *idempotencyResponseWriter) flush(target http.ResponseWriter) {
 		target.Header()[key] = append([]string(nil), values...)
 	}
 	target.WriteHeader(w.status)
-	_, _ = target.Write(w.body.Bytes())
+	if _, err := target.Write(w.body.Bytes()); err != nil {
+		logging.Error(context.Background(), slog.Default(), "failed to write idempotent response", nil, err)
+	}
 }
 
 var _ http.ResponseWriter = (*idempotencyResponseWriter)(nil)

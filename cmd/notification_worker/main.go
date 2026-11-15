@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"log/slog"
 	"monitoring_service/internal/broker"
 	"monitoring_service/internal/config"
 	"monitoring_service/internal/database"
@@ -12,7 +14,6 @@ import (
 	"monitoring_service/internal/repository"
 	"monitoring_service/internal/sender"
 	"monitoring_service/internal/service"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -64,6 +65,7 @@ func main() {
 		for d := range deliveries {
 			var p payload
 			if json.Unmarshal(d.Body, &p) != nil || !broker.ValidDeliveryID(d.MessageId) || !((p.NotificationID > 0 && p.OperationalNotificationID == 0 && p.ContactVerificationID == "") || (p.OperationalNotificationID > 0 && p.NotificationID == 0 && p.ContactVerificationID == "") || (p.ContactVerificationID != "" && p.NotificationID == 0 && p.OperationalNotificationID == 0 && broker.ValidDeliveryID(p.ContactVerificationID))) {
+				logging.Error(ctx, l, "invalid notification delivery", nil, errors.New("invalid notification payload or message ID"))
 				if err := b.Nack(d, false); err != nil {
 					logging.Error(ctx, l, "dead-letter invalid notification", nil, err)
 				}

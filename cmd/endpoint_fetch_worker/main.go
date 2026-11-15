@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"monitoring_service/internal/authorization"
 	"monitoring_service/internal/broker"
 
@@ -10,11 +11,11 @@ import (
 	"monitoring_service/internal/logging"
 	"monitoring_service/internal/metrics"
 
+	"log/slog"
 	"monitoring_service/internal/ratelimit"
 	"monitoring_service/internal/repository"
 	"monitoring_service/internal/sender"
 	"monitoring_service/internal/service"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -73,6 +74,7 @@ func main() {
 		for d := range deliveries {
 			fetchID, valid := broker.DecodeFetchDelivery(d.Body, d.MessageId)
 			if !valid {
+				logging.Error(ctx, l, "invalid fetch delivery", nil, errors.New("invalid fetch payload or message ID"))
 				if err := b.Nack(d, false); err != nil {
 					logging.Error(ctx, l, "dead-letter malformed fetch", nil, err)
 				}

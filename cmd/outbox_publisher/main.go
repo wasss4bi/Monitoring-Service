@@ -4,13 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log/slog"
 	"monitoring_service/internal/broker"
 	"monitoring_service/internal/config"
 	"monitoring_service/internal/database"
 	"monitoring_service/internal/logging"
 	"monitoring_service/internal/metrics"
 	"monitoring_service/internal/repository"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -63,13 +63,17 @@ func main() {
 		metrics.ObserveOutboxEvent("claimed")
 		routingKey, e := routingKeyForEvent(event.EventType)
 		if e != nil {
-			_ = out.Release(context.Background(), event.ID, token)
+			if releaseErr := out.Release(context.Background(), event.ID, token); releaseErr != nil {
+				logging.Error(ctx, l, "release outbox event", map[string]any{"event_id": event.EventID}, releaseErr)
+			}
 			logging.Error(ctx, l, "unsupported outbox event type", map[string]any{"event_id": event.EventID, "event_type": event.EventType}, e)
 			metrics.ObserveOutboxEvent("unsupported_event")
 			continue
 		}
 		if e = b.Publish(ctx, routingKey, event.Payload, event.EventID); e != nil {
-			_ = out.Release(context.Background(), event.ID, token)
+			if releaseErr := out.Release(context.Background(), event.ID, token); releaseErr != nil {
+				logging.Error(ctx, l, "release outbox event", map[string]any{"event_id": event.EventID}, releaseErr)
+			}
 			logging.Error(ctx, l, "publish outbox event", map[string]any{"event_id": event.EventID}, e)
 			metrics.ObserveOutboxEvent("publish_error")
 			continue

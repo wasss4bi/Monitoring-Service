@@ -6,8 +6,8 @@ discovery.relabel "docker_logs" {
   targets = discovery.docker.docker.targets
 
   rule {
-    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
-    regex         = "monitoring_service|postgres"
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = "monitoring-service|monitoring_service"
     action        = "keep"
   }
 

@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -20,13 +21,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 	"monitoring_service/internal/domain"
 	"monitoring_service/internal/httpapi"
 	"monitoring_service/internal/httpapi/handler"
 	"monitoring_service/internal/migrator"
 	"monitoring_service/internal/repository"
 	"monitoring_service/internal/service"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func rbacDB(t *testing.T) (*sql.DB, string) {
@@ -246,5 +247,42 @@ func TestAdminMigrationRejectsExistingEmail(t *testing.T) {
 	var hash string
 	if err := db.QueryRowContext(t.Context(), `SELECT password FROM users WHERE email='collision@example.com'`).Scan(&hash); err != nil || hash != "existing-hash" {
 		t.Fatal("conflicting account was modified")
+	}
+}
+
+func TestMigrationsApplyNewVersionOnce(t *testing.T) {
+	db, dsn := rbacDB(t)
+	t.Setenv("ADMIN_EMAIL", "migration-test@example.com")
+	t.Setenv("ADMIN_PASSWORD", "fixture-admin-password-strong")
+	if err := migrator.Up(dsn, "../../migrations"); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	paths, err := filepath.Glob("../../migrations/*.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range paths {
+		body, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, filepath.Base(path)), body, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(dir, "000003_test.up.sql"), []byte("CREATE TABLE migration_once_test (id integer); INSERT INTO migration_once_test VALUES (1);"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("ADMIN_EMAIL", "")
+	t.Setenv("ADMIN_PASSWORD", "")
+	for range 2 {
+		if err := migrator.Up(dsn, dir); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var count int
+	if err := db.QueryRowContext(t.Context(), "SELECT count(*) FROM migration_once_test").Scan(&count); err != nil || count != 1 {
+		t.Fatalf("migration should run once: count=%d, err=%v", count, err)
 	}
 }

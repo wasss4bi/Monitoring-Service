@@ -55,9 +55,6 @@ func Up(databaseURL, migrationsPath string) error {
 	if err != nil && !errors.Is(err, migrate.ErrNilVersion) {
 		return err
 	}
-	if err == nil && version > 2 {
-		return fmt.Errorf("database migration version %d belongs to an incompatible migration history; use a new database", version)
-	}
 	if !dirty && (errors.Is(err, migrate.ErrNilVersion) || version < 2) {
 		email := strings.TrimSpace(os.Getenv("ADMIN_EMAIL"))
 		password := os.Getenv("ADMIN_PASSWORD")

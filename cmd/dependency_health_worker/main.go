@@ -28,7 +28,7 @@ func main() {
 	defer client.Close()
 	db, err := database.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
-		slog.Error("open dependency database")
+		slog.Error("open dependency database", "error", err)
 		return
 	}
 	defer db.Close()
@@ -62,14 +62,14 @@ func main() {
 			}
 			done()
 			if err != nil {
-				slog.Error("record Fetcher dependency probe failed")
+				slog.Error("Fetcher dependency probe failed", "capability", capability, "error", err)
 			}
 		}
 		recoverCtx, done := context.WithTimeout(ctx, time.Second)
 		err := repo.RecoverAlerts(recoverCtx)
 		done()
 		if err != nil {
-			slog.Error("recover operational alerts failed")
+			slog.Error("recover operational alerts failed", "error", err)
 		}
 		select {
 		case <-ctx.Done():

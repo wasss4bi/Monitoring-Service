@@ -15,6 +15,8 @@ unset registry_token
 compose=(docker compose -f docker-compose.server.yml)
 "${compose[@]}" config --quiet
 "${compose[@]}" pull
+# A new named volume is owned by root; browser containers run as UID 1000.
+"${compose[@]}" run --rm --no-deps --user 0 --entrypoint chown browserless 1000:1000 /var/lib/monitoring_service/browserless-profiles
 "${compose[@]}" up -d --wait postgres rabbitmq redis
 "${compose[@]}" stop monitoring_service outbox_publisher monitor_scheduler endpoint_fetch_worker endpoint_fetch_html_worker notification_worker monitoring_cleanup dependency_health_worker
 "${compose[@]}" run --rm --no-deps migration

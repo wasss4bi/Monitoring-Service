@@ -66,6 +66,7 @@ func Up(databaseURL, migrationsPath string) error {
 		if err != nil {
 			return fmt.Errorf("hash bootstrap administrator password: %w", err)
 		}
+		// Migration 2 reads these bootstrap values from this same database connection.
 		if _, err := conn.ExecContext(ctx, `SELECT set_config('monitoring_service.admin_email',$1,false),set_config('monitoring_service.admin_password_hash',$2,false)`, email, string(hash)); err != nil {
 			return fmt.Errorf("configure administrator migration: %w", err)
 		}
